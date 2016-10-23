@@ -114,7 +114,7 @@ public class CoverCache {
 	 * @return a bitmap or null if no artwork was found
 	 */
 	public Bitmap getCoverFromSong(Context ctx, Song song, int size) {
-		CoverKey key = new CoverCache.CoverKey(MediaUtils.TYPE_ALBUM, song.albumId, size);
+		CoverKey key = new CoverCache.CoverKey(MediaUtils.TYPE_SONG, song.id, size);
 		Bitmap cover = getStoredCover(key);
 		if (cover == null) {
 			cover = sBitmapDiskCache.createBitmap(ctx, song, size*size);
