@@ -11,7 +11,7 @@ android {
     compileSdkVersion rootProject.ext.compileSdkVersion
 
     defaultConfig {
-        applicationId "ch.blinkenlights.android.vanilla"
+        applicationId "uk.co.biblestudyman.mpdj.vanilla"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
     }
