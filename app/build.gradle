@@ -1,6 +1,8 @@
 apply plugin: 'com.android.application'
 
 android {
+    namespace 'ch.blinkenlights.android.vanilla'
+
     lintOptions {
         disable 'MissingTranslation'
         disable 'ExtraTranslation'
