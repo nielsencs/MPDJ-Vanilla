@@ -1,92 +1,69 @@
-Vanilla Music
-=====================
+MPDJ Vanilla
+============
 
-Vanilla Music player is a [GPLv3](LICENSE) licensed MP3/OGG/FLAC/PCM player for Android with the following features:
+MPDJ Vanilla is a maintained fork of [Vanilla Music](https://github.com/vanilla-music/vanilla), preserving its simple local-music-player spirit while keeping Android builds available, policy-compliant, and ad-free.
+
+It is a GPLv3 licensed MP3/OGG/FLAC/PCM player for Android with the following features:
+
+* local music playback without adverts or tracking
 * multiple playlist support
 * grouping by artist, album or genre
 * plain filesystem browsing
-* [ReplayGain](https://en.wikipedia.org/wiki/ReplayGain) support
+* ReplayGain support
 * headset/Bluetooth controls
 * accelerometer/shake control
 * cover art support
-* [Simple Last.fm Scrobbler](https://github.com/tgwizard/sls) support
+* Simple Last.fm Scrobbler compatible broadcasts
 
-[<img src="https://f-droid.org/badge/get-it-on.png"
-      alt="Get it on F-Droid"
-      height="80">](https://f-droid.org/app/ch.blinkenlights.android.vanilla)
+Lineage
+-------
 
-**Note:** As of 23. Jun 2024, Vanilla Music is *no longer* available in the Google Play store:
-I simply don't have time to comply with random policy changes and verification requests.
-Any release you see there is probably an ad-infested fork uploaded by someone else.
+This project is a fork of Vanilla Music. Vanilla Music is no longer available from Google Play as of June 2024, and the original maintainer warned that Play Store releases using that name may be ad-infested third-party forks.
 
+MPDJ Vanilla keeps the original GPLv3 licence, credits the original project, and uses a separate Android application ID for new builds.
 
-Plugins
-===========
+Distribution
+-------------
 
-Vanilla Music also includes support for plugins, this is a list of some existing plugins:
-* [Cover fetcher](https://play.google.com/store/apps/details?id=com.kanedias.vanilla.coverfetch)
-* [Lyrics search](https://play.google.com/store/apps/details?id=com.kanedias.vanilla.lyrics)
-* [Tag editor](https://play.google.com/store/apps/details?id=com.kanedias.vanilla.audiotag)
-* [Headphone detector](https://play.google.com/store/apps/details?id=ch.blinkenlights.android.vanillaplug)
+Planned public distribution order:
 
+1. GitHub Releases
+2. F-Droid, if the metadata/build process is accepted
+3. Google Play, if the release and policy work stays manageable
 
-Donations
-===========
-You can donate to Vanilla Musics development via Bitcoin
+Until this fork has its own F-Droid package, do not use the old Vanilla Music F-Droid badge/link for MPDJ Vanilla builds.
 
-Bitcoin: [1adrianERDJusC4c8whyT81zAuiENEqub](https://blockchain.info/address/1adrianERDJusC4c8whyT81zAuiENEqub)
+Privacy
+-------
 
+MPDJ Vanilla is intended to be an offline local music player. The app currently requests no Internet permission, so it cannot make network connections directly.
 
-Community
-===========
-Come over and join us on our subreddit [**/r/VanillaMusic**](https://www.reddit.com/r/vanillamusic) to hangout with fellow Vanilla Music users, ask questions, or help others by answering their questions!
-
-Contributing
-===========
-
-Translating
------------
-[You can help translate here][1]. If your language isn't on the list, sign in to transifex and request the language to be added to the list of translations.
-(Feel free to open a bug if your request was not approved within a few days - i don't look into transifex that often.)
-
-Contributing code
----------------
-* A list of open issues can be found at the [issue tracker][2]
-* Features we would like to see (but nobody started working on them yet) have the [patches-welcome][3] label attached to them. Please let us know if you start working on such an open issue (to avoid duplicate work)
-* We accept raw patches and github pull request - and we use tabs (if your editor understands .editorconfig, it will help you enforce this).
+The app requests media/storage permissions so it can find and play audio files, including files stored on removable media where Android exposes them through normal media/storage access.
 
 Building
-========
-To build you will need:
+--------
 
- * A Java compiler compatible with Java 1.8
- * The Android SDK with platform 26 installed
+Requirements:
 
-Building from command-line
---------------------------
-> Note: at the time of this writing, the current version of Gradle ([4.5.1](https://gradle.org/releases/)) is not compatible with the current version of JDK ([9.0.4](http://www.oracle.com/technetwork/java/javase/downloads/jdk9-downloads-3848520.html)). To have the build succeed, use JDK version [1.8.0_162](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).
- * `gradle build` to build the APK
- * Optional: `gradle installDebug` to install the APK to a connected device
+* JDK compatible with the Android Gradle Plugin used by this project
+* Android SDK with the configured compile SDK installed
 
-Building with Android Studio
----------------------
-You can also build with Android Studio by importing this project into it.
+Build a debug APK:
 
-Building from Eclipse
----------------------
-You can also build from Eclipse. Create a new Android Project, choosing "Create
-project from exisiting source", then set the compiler compliance level to 1.6
-in project settings.
+```sh
+ANDROID_HOME=/path/to/Android/Sdk ./gradlew assembleDebug
+```
 
-Nightly Builds
----------------------
-Automatically created builds are available from http://android.eqmx.net/android/vanilla/VanillaMusic-nightly.apk
+Build a release APK or Android App Bundle:
 
-Documentation
-=============
-Javadocs can be generated using `gradle javadoc` or `ant doc`
+```sh
+ANDROID_HOME=/path/to/Android/Sdk ./gradlew assembleRelease
+ANDROID_HOME=/path/to/Android/Sdk ./gradlew bundleRelease
+```
 
+Release signing is documented in [`docs/release-signing.md`](docs/release-signing.md).
 
-  [1]: https://www.transifex.com/projects/p/vanilla-music-1/
-  [2]: https://github.com/vanilla-music/vanilla/issues
-  [3]: https://github.com/vanilla-music/vanilla/labels/patches-welcome
+Contributing
+------------
+
+Please keep changes simple, reviewable, and honest about the project’s Vanilla Music lineage. New public-facing material should say MPDJ Vanilla unless it is explicitly discussing the original Vanilla Music project.

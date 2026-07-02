@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources>
-  <string name="app_name">Vanilla zenelejátszó</string>
+  <string name="app_name">MPDJ Vanilla</string>
   <string name="ok">OK</string>
   <string name="cancel">Mégse</string>
   <!--Playback Activity (main screen)-->
@@ -199,7 +199,7 @@
   <string name="disable_lockscreen_title">Zárképernyő letiltása</string>
   <string name="disable_lockscreen_summary">A zárképernyő letiltása a gyűjtemény és a lejátszás képernyőknél</string>
   <string name="keep_screen_on_title">Képernyő bekapcsolva tartása</string>
-  <string name="keep_screen_on_summary">A képernyő (és az eszköz) ébren tartása, ha a Vanilla Music látható</string>
+  <string name="keep_screen_on_summary">A képernyő (és az eszköz) ébren tartása, ha a MPDJ Vanilla látható</string>
   <string name="use_idle_timeout_title">Tétlenségi időtúllépés engedélyezése</string>
   <string name="use_idle_timeout_summary">Ha aktív, akkor a lejátszás leállításra kerül a megadott tétlenségi idő lejárta után</string>
   <string name="idle_timeout_title">Tétlenségi időtúllépés</string>
@@ -294,7 +294,7 @@
   <string name="playlist_sync_folder_summary">A lejátszólista szinkronizációhoz használandó mappa</string>
   <string name="playlist_export_relative_paths_title">Exportálás relatív útvonalak használatáva</string>
   <string name="playlist_export_relative_paths_summary">A fájlok relatív hivatkozása a lejátszólistához képest</string>
-  <string name="permission_request_summary">A Vanilla zenelejátszónak olvasási engedélyre van szükségre, hogy megjelenítse a gyűjteményét</string>
+  <string name="permission_request_summary">A MPDJ Vanillanak olvasási engedélyre van szükségre, hogy megjelenítse a gyűjteményét</string>
   <string name="reverse_sort">Fordított rendezés</string>
   <string name="share">Megosztás…</string>
   <string name="share_failed">A fájl megosztása meghiúsult</string>

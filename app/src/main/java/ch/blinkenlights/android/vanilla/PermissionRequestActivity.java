@@ -145,9 +145,9 @@ public class PermissionRequestActivity extends Activity {
 
 	private static String[] getNeededPermissions() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-			return new String[] { Manifest.permission.READ_MEDIA_AUDIO, Manifest.permission.READ_MEDIA_IMAGES };
+			return new String[] { Manifest.permission.READ_MEDIA_AUDIO };
 		}
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 			return new String[] { Manifest.permission.READ_EXTERNAL_STORAGE };
 		}
 		return new String[] { Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE };
