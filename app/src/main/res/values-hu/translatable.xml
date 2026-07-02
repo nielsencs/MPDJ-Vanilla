@@ -167,7 +167,7 @@
   <string name="replaygain_untagged_debump_title">Számok ReplayGain címke nélkül</string>
   <string name="replaygain_untagged_debump_summary">Hangerő csökkentése</string>
   <string name="replaygain_preamp_note_title">Megjegyzés</string>
-  <string name="replaygain_preamp_note_content">Az Android nem engedi hogy a Vanilla Zenelejátszó &gt;100% értékre állítsa a hangerőt. Az előerősítés értékének túl magasra emelése problémákat okozhat, ha „halk” zenét hallgat.\n\nAz ajánlott értékek:\n-&gt; -3dB halk/klasszikus zenéhez\n-&gt; +3dB a 2000 utáni felvételekhez</string>
+  <string name="replaygain_preamp_note_content">Az Android nem engedi hogy a MPDJ Vanilla Zenelejátszó &gt;100% értékre állítsa a hangerőt. Az előerősítés értékének túl magasra emelése problémákat okozhat, ha „halk” zenét hallgat.\n\nAz ajánlott értékek:\n-&gt; -3dB halk/klasszikus zenéhez\n-&gt; +3dB a 2000 utáni felvételekhez</string>
   <string name="disable_gapless_playback_title">Szünetmentes lejátszás kikapcsolása</string>
   <string name="disable_gapless_playback_summary">A szünetmentes lejátszás használatának mellőzése segíthet a hibás firmware-rel rendelkező eszközök lejátszási problémáin</string>
   <string name="readahead">Előreolvasás engedélyezése</string>

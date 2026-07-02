@@ -261,10 +261,10 @@ THE SOFTWARE.
 	<string name="coverloader_android_title">Load artwork from Android</string>
 	<string name="coverloader_android_summary">Query Androids internal media database for album artwork</string>
 
-	<string name="coverloader_vanilla_title">Load artwork from folder</string>
+	<string name="coverloader_vanilla_title">Load artwork from folder (MPDJ)</string>
 	<string name="coverloader_vanilla_summary">Search for image files named cover.jpg, album.jpg or artwork.jpg and display them as album cover</string>
 
-	<string name="coverloader_shadow_title">Load artwork from hidden folder</string>
+	<string name="coverloader_shadow_title">Load artwork from hidden folder (Legacy)</string>
 	<string name="coverloader_shadow_summary">Try to load artwork from \'/sdcard/Music/.vanilla/ARTIST/ALBUM.jpg\'</string>
 
 	<string name="coverloader_inline_title">Load artwork from file tags</string>

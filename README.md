@@ -22,6 +22,8 @@ This project is a fork of Vanilla Music. Vanilla Music is no longer available fr
 
 MPDJ Vanilla keeps the original GPLv3 licence, credits the original project, and uses a separate Android application ID for new builds.
 
+To maintain compatibility with existing Vanilla Music cache, this app continues to use the `.vanilla` directory on your storage (e.g., `/sdcard/Music/.vanilla/`) for storing and retrieving cached album artwork.
+
 Distribution
 -------------
 

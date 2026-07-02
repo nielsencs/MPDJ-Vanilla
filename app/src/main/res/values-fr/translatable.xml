@@ -205,7 +205,7 @@
   <string name="disable_lockscreen_title">Désactiver le verrouillage de l\'écran</string>
   <string name="disable_lockscreen_summary">Empêche le verrouillage de l\'écran lorsque la bibliothèque ou l\'écran de lecture est affiché</string>
   <string name="keep_screen_on_title">Maintenir l\'écran allumé</string>
-  <string name="keep_screen_on_summary">Maintient l\'écran (et l\'appareil) en éveil lorsque Vanilla est visible</string>
+  <string name="keep_screen_on_summary">Maintient l\'écran (et l\'appareil) en éveil lorsque MPDJ Vanilla est visible</string>
   <string name="use_idle_timeout_title">Activer le délai d\'inactivité</string>
   <string name="use_idle_timeout_summary">Quand l\'option est activée, la lecture s\'arrêtera après la période d\'inactivité donnée</string>
   <string name="idle_timeout_title">Délai d\'inactivité</string>
