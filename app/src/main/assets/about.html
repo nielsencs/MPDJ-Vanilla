@@ -19,16 +19,31 @@ function show(n) {
 </script>
 </head>
 <body>
-<h1>Vanilla Music</h1>
-<p><b>Version:</b> 1.3.2 Released 10. Jan. 2024<br><br>
-<b>Website:</b> <a href='https://vanilla-music.github.io/'>https://vanilla-music.github.io/</a><br>
-<b>Issue tracker:</b> <a href='https://github.com/vanilla-music/vanilla/issues'>https://github.com/vanilla-music/vanilla/issues</a><br>
-<b>Community &amp; support:</b> <a href='https://www.reddit.com/r/vanillamusic'>/r/VanillaMusic</a><br>
-<br>
+<h1>MPDJ Vanilla</h1>
+<p>MPDJ Vanilla is a maintained, ad-free fork of Vanilla Music for playing local music on Android. It keeps the simple offline-player spirit of the original project while using a separate app identity for new public builds.</p>
+
+<p>
+<b>Version:</b> 1.3.2 MPDJ public-preparation build<br>
+<b>Source:</b> <a href='https://github.com/nielsencs/MPDJ-Vanilla'>https://github.com/nielsencs/MPDJ-Vanilla</a><br>
+<b>Original project:</b> <a href='https://github.com/vanilla-music/vanilla'>Vanilla Music</a><br>
+<b>Internet access:</b> none requested by the app
+</p>
+
+<p>This is not an official release by the original Vanilla Music maintainers. MPDJ Vanilla is a fork that credits the original GPLv3 project and continues from that codebase.</p>
+
 <b>Changelog</b> [<a href='javascript:show("changelog")'>show</a>]
 <pre id='changelog'>
 
-<b>1.3.2</b>
+<b>1.3.2 MPDJ public-preparation build</b>
+- Rename public-facing app to MPDJ Vanilla
+- Add separate MPDJ package identity for test/public builds
+- Refresh launcher icon resources
+- Update Android target SDK to 35
+- Tighten media/storage permissions
+- Keep the app offline: no Internet permission requested
+- Prepare release-signing and store-listing metadata
+
+<b>1.3.2 Vanilla Music upstream</b>
 - Upgrade to Android SDK 34
 
 <b>1.3.1</b>
@@ -307,17 +322,26 @@ function show(n) {
 - <b>NEW</b> Gradle / Android Studio support by @AltNico
 - <b>FIX</b> Enqueue bug introduced in 0.9.42
 </pre>
-<h2>Contributors</h2>
+<h2>Credits</h2>
+<p>MPDJ Vanilla is maintained as a public fork of Vanilla Music. Current fork work includes Android build updates, public release preparation, package separation, permissions review, and MPDJ Vanilla launcher artwork.</p>
+
+<h3>MPDJ Vanilla</h3>
 <ul>
-	<li>Adrian Ulrich (current maintainer)</li>
-	<li>Amin Bandali (current maintainer)</li>
+	<li>MPDJ Vanilla maintainers and contributors</li>
+</ul>
+
+<h3>Original Vanilla Music project</h3>
+<p>The following credits are retained from the original Vanilla Music project and its history. They are not shown here as current MPDJ Vanilla maintainers.</p>
+<ul>
+	<li>Chris Eby (original creator)</li>
+	<li>Adrian Ulrich (Vanilla Music maintainer)</li>
+	<li>Amin Bandali (Vanilla Music maintainer)</li>
 	<li>Andrew Nayenko (pre 1.0.53 icon)</li>
 	<li>Azer Abdullaev (github.com/reactorcoremeltdown) (Purple theme)</li>
-	<li>Chris Eby (original creator)</li>
 	<li>David Beswick (various contributions)</li>
 	<li>Emir Sar&#305; (Turkish translation)</li>
 	<li>Ferenc Nagy (icon)</li>
-	<li>Jean-Baptiste Lab (notication color invert)</li>
+	<li>Jean-Baptiste Lab (notification color invert)</li>
 	<li>Jean-Fran&ccedil;ois Im (cover art loading)</li>
 	<li>Jerry Liao (Chinese (Taiwan) translation)</li>
 	<li>Jiri Gr&ouml;nroos (Finnish translation)</li>
@@ -326,12 +350,14 @@ function show(n) {
 	<li>Oleg (Adonai) Chernovskiy (fastscroll)</li>
 	<li>Rosario Antoci (Italian translation)</li>
 	<li>Xiao Bao Clark (various contributions)</li>
-	<li>Yacine Krouri (current icon and various graphics)</li>
+	<li>Yacine Krouri (Vanilla Music icon and various graphics)</li>
 	<!-- TODO: add more translators -->
 </ul>
 <h2>Licenses</h2>
-<h3>Vanilla Music [<a href='javascript:show("l1")'>show</a>]</h3>
+<h3>MPDJ Vanilla / Vanilla Music GPLv3 licence [<a href='javascript:show("l1")'>show</a>]</h3>
 <pre id='l1'>
+MPDJ Vanilla is a fork of Vanilla Music.
+Copyright (C) 2026 MPDJ Vanilla contributors
 Copyright (C) 2012-2018 Vanilla Music contributors
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.

@@ -1,0 +1,7 @@
+MPDJ Vanilla is a maintained fork of Vanilla Music, preserving its simple local-music-player spirit while keeping Android builds available, policy-compliant, and ad-free.
+
+Features include local MP3/OGG/FLAC/PCM playback, playlists, artist/album/genre grouping, filesystem browsing, ReplayGain, headset/Bluetooth controls, shake controls, cover art, widgets, and compatible scrobble broadcasts.
+
+MPDJ Vanilla is intended to be offline and privacy-respecting. It requests no Internet permission, so it cannot make direct network connections. Media/storage permissions are used to find and play audio files on the device, including removable storage where Android exposes it through normal media/storage access.
+
+This app is GPLv3 free software and is based on Vanilla Music. It is not an official release by the original Vanilla Music maintainer.

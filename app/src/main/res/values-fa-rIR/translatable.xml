@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources>
-  <string name="app_name">وانیلا موزیک</string>
+  <string name="app_name">MPDJ Vanilla</string>
   <string name="ok">بسیار خوب</string>
   <string name="cancel">کنسل</string>
   <!--Playback Activity (main screen)-->
@@ -219,7 +219,7 @@
   <string name="autoplaylist_playcounts_fmt" formatted="false">%s \'بالا %.0f\' لیست پخش</string>
   <string name="autoplaylist_playcounts_disabled">یک لیست پخش بصورت خودکار ایجاد نشود</string>
   <string name="autoplaylist_playcounts_name" formatted="false">بالا %d</string>
-  <string name="permission_request_summary">وانیلا موزیک برای نمایش کتابخانه موزیک ،نیاز به دسترسی خواندن دارد</string>
+  <string name="permission_request_summary">MPDJ Vanilla برای نمایش کتابخانه موزیک ،نیاز به دسترسی خواندن دارد</string>
   <!--Folder selector-->
   <!--Plugin system-->
   <!--Theme names-->

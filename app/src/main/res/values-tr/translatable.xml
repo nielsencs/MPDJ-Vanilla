@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources>
-  <string name="app_name">Vanilya Müzik</string>
+  <string name="app_name">MPDJ Vanilla</string>
   <string name="ok">Tamam</string>
   <string name="cancel">İptal</string>
   <!--Playback Activity (main screen)-->
@@ -167,7 +167,7 @@
   <string name="replaygain_untagged_debump_title">Ses Eşitleme etiketi olmayan parçalar</string>
   <string name="replaygain_untagged_debump_summary">Ses düzeyini şu kadar indir:</string>
   <string name="replaygain_preamp_note_title">Not</string>
-  <string name="replaygain_preamp_note_content">Android Vanilya Müzik\'in ses düzeyini &gt;%100\'e çıkartmasına izin vermiyor. Pre-amp\'ı daha yüksek bir değere çıkarmak özellikle \"sessiz\" müzikler dinlerken sorunlara neden olabilir.\n\nTavsiye edilen değerler: sessiz/klasik müzik için \n-&gt; -3dB -2000 yılı sonrası kayıtlar için +3dB\'dir.</string>
+  <string name="replaygain_preamp_note_content">Android MPDJ Vanilla\'in ses düzeyini &gt;%100\'e çıkartmasına izin vermiyor. Pre-amp\'ı daha yüksek bir değere çıkarmak özellikle \"sessiz\" müzikler dinlerken sorunlara neden olabilir.\n\nTavsiye edilen değerler: sessiz/klasik müzik için \n-&gt; -3dB -2000 yılı sonrası kayıtlar için +3dB\'dir.</string>
   <string name="disable_gapless_playback_title">Boşluksuz Çalmayı Devre Dışı Bırak</string>
   <string name="disable_gapless_playback_summary">Boşluksuz Çalma’yı devre dışı bırakmak, düzgün olmayan üretici yazılımlarıyla yaşanabilecek sorunları azaltmada yardımcı olabilir</string>
   <string name="readahead">Önbelleğe yazmayı etkinleştir</string>
@@ -199,7 +199,7 @@
   <string name="disable_lockscreen_title">Kilit ekranını devre dışı bırak</string>
   <string name="disable_lockscreen_summary">Arşiv veya çalma ekranındayken kilit ekranını devre dışı bırak</string>
   <string name="keep_screen_on_title">Ekranı açık tut</string>
-  <string name="keep_screen_on_summary">Vanilya Müzik görünür olduğu zaman ekranı (ve aygıtı) uyanık tut</string>
+  <string name="keep_screen_on_summary">MPDJ Vanilla görünür olduğu zaman ekranı (ve aygıtı) uyanık tut</string>
   <string name="use_idle_timeout_title">Boşta kalma süresini etkinleştir</string>
   <string name="use_idle_timeout_summary">Çalma belli bir sürelik etkisizliğin ardından durdurulur</string>
   <string name="idle_timeout_title">Boşta kalma süresi</string>
@@ -294,7 +294,7 @@
   <string name="playlist_sync_folder_summary">Çalma listesi eşitlemesi için kullanılacak klasör</string>
   <string name="playlist_export_relative_paths_title">Göreceli yol adları kullanarak dışa aktar</string>
   <string name="playlist_export_relative_paths_summary">Çalma listesine göreli dosya yollarına başvur</string>
-  <string name="permission_request_summary">Vanilya Müzik, müzik arşivinizi görüntüleyebilmek için izninize gereksinim duyar</string>
+  <string name="permission_request_summary">MPDJ Vanilla, müzik arşivinizi görüntüleyebilmek için izninize gereksinim duyar</string>
   <string name="reverse_sort">Sıralamayı tersine çevir</string>
   <string name="share">Paylaş…</string>
   <string name="share_failed">Dosya paylaşımı başarısız</string>

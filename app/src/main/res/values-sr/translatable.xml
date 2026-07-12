@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources>
-  <string name="app_name">Ванила музика</string>
+  <string name="app_name">MPDJ Vanilla</string>
   <string name="ok">У реду</string>
   <string name="cancel">Одустани</string>
   <!--Playback Activity (main screen)-->
@@ -200,7 +200,7 @@
   <string name="disable_lockscreen_title">Онемогући закључавање екрана</string>
   <string name="disable_lockscreen_summary">Спречава активирање екрана заључавања при екрану пуштања или библиотеке</string>
   <string name="keep_screen_on_title">Држи екран укљученим</string>
-  <string name="keep_screen_on_summary">Држи екран (и уређај) будним док је Ванила музика видљива </string>
+  <string name="keep_screen_on_summary">Држи екран (и уређај) будним док је MPDJ Vanilla видљива </string>
   <string name="use_idle_timeout_title">Укључи време мировања</string>
   <string name="use_idle_timeout_summary">Активирано зауставља пуштање након задатог времена неактивности</string>
   <string name="idle_timeout_title">Време мировања</string>
@@ -283,7 +283,7 @@
   <string name="playlist_sync_disabled">Искључена</string>
   <string name="playlist_sync_folder_title">Фасцикла синхронизације</string>
   <string name="playlist_sync_folder_summary">Фасцикла за синхронизацију листе нумера</string>
-  <string name="permission_request_summary">Ванила музика захтева дозволу читања да би приказала вашу музичку библиотеку</string>
+  <string name="permission_request_summary">MPDJ Vanilla захтева дозволу читања да би приказала вашу музичку библиотеку</string>
   <string name="reverse_sort">Обрнуто ређање</string>
   <string name="share">Дели…</string>
   <string name="share_failed">Дељење фајла није успело</string>
