@@ -548,12 +548,16 @@ public class MediaScanner implements Handler.Callback {
 			if (isUnset(discNumber))
 				discNumber = "1"; // untagged, but most likely '1' - this prevents annoying sorting issues with partially tagged files
 
-			long artistId = MediaLibrary.hash63(artist);
-			long albumId = MediaLibrary.hash63(album);
+			String albumartist = tags.getFirst(MediaMetadataExtractor.ALBUMARTIST);
+			String albumOwner = isUnset(albumartist) ? artist : albumartist;
 
-			// Overwrite albumId with a hash that included the parent dir if set in preferences
+			long artistId = MediaLibrary.hash63(artist);
+			long albumOwnerId = MediaLibrary.hash63(albumOwner);
+			long albumId = MediaLibrary.hash63(albumOwner + "\n" + album);
+
+			// Overwrite albumId with a hash that also includes the parent dir if set in preferences
 			if (prefs.groupAlbumsByFolder) {
-				albumId = MediaLibrary.hash63(album + "\n" + file.getParent());
+				albumId = MediaLibrary.hash63(albumOwner + "\n" + album + "\n" + file.getParent());
 			}
 
 			ContentValues v = new ContentValues();
@@ -575,7 +579,7 @@ public class MediaScanner implements Handler.Callback {
 			v.put(MediaLibrary.AlbumColumns._ID,               albumId);
 			v.put(MediaLibrary.AlbumColumns.ALBUM,             album);
 			v.put(MediaLibrary.AlbumColumns.ALBUM_SORT,        MediaLibrary.keyFor(album));
-			v.put(MediaLibrary.AlbumColumns.PRIMARY_ARTIST_ID, artistId);
+			v.put(MediaLibrary.AlbumColumns.PRIMARY_ARTIST_ID, albumOwnerId);
 			v.put(MediaLibrary.AlbumColumns.PRIMARY_ALBUM_YEAR,tags.getFirst(MediaMetadataExtractor.YEAR));
 			long albumInsert = mBackend.insert(MediaLibrary.TABLE_ALBUMS, null, v);
 			if (albumInsert == -1) {
@@ -583,9 +587,10 @@ public class MediaScanner implements Handler.Callback {
 				// We need to ensure that the album table is up-to-date as it contains
 				// some 'cached' (PRIMARY_*) values.
 				// Failure to do so would mean that we never update the year or may point to an
-				// orphaned artist id.
+				// orphaned artist id. Use the album owner here, not the per-track artist,
+				// so compilations with varying track artists still display as their album artist.
 				v.clear();
-				v.put(MediaLibrary.AlbumColumns.PRIMARY_ARTIST_ID, artistId);
+				v.put(MediaLibrary.AlbumColumns.PRIMARY_ARTIST_ID, albumOwnerId);
 				v.put(MediaLibrary.AlbumColumns.PRIMARY_ALBUM_YEAR,tags.getFirst(MediaMetadataExtractor.YEAR));
 				mBackend.update(MediaLibrary.TABLE_ALBUMS, v, MediaLibrary.AlbumColumns._ID+"=?", new String[]{ Long.toString(albumId) });
 			}
@@ -620,9 +625,8 @@ public class MediaScanner implements Handler.Callback {
 			}
 
 			// Same as with composer: albumartist is an optional tag
-			String albumartist = tags.getFirst(MediaMetadataExtractor.ALBUMARTIST);
 			if (albumartist != null) {
-				long albumartistId = MediaLibrary.hash63(albumartist);
+				long albumartistId = albumOwnerId;
 				v.clear();
 				v.put(MediaLibrary.ContributorColumns._ID,               albumartistId);
 				v.put(MediaLibrary.ContributorColumns._CONTRIBUTOR,      albumartist);
@@ -659,7 +663,7 @@ public class MediaScanner implements Handler.Callback {
 		return hasChanged;
 	}
 
-	private static final Pattern sIgnoredFilenames = Pattern.compile("^([^\\.]+|.+\\.(jpe?g|gif|png|bmp|webm|txt|pdf|avi|mp4|mkv|zip|tgz|xml|tmp|bin))$", Pattern.CASE_INSENSITIVE);
+	private static final Pattern sIgnoredFilenames = Pattern.compile("^([^\\.]+|.+\\.(jpe?g|gif|png|bmp|webm|txt|pdf|avi|mkv|zip|tgz|xml|tmp|bin))$", Pattern.CASE_INSENSITIVE);
 	/**
 	 * Returns true if the file should not be scanned
 	 *
@@ -829,4 +833,3 @@ public class MediaScanner implements Handler.Callback {
 		}
 	}
 }
-

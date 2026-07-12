@@ -234,7 +234,7 @@ public class CoverCache {
 		 * @param cacheSize The maximal amount of disk space to use in bytes
 		 */
 		public BitmapDiskCache(Context context, long cacheSize) {
-			super(context, "covercache.db", null, 1 /* version */);
+			super(context, "covercache.db", null, 2 /* version */);
 			mCacheSize = cacheSize;
 		}
 
@@ -252,7 +252,9 @@ public class CoverCache {
 		 */
 		@Override
 		public void onUpgrade(SQLiteDatabase dbh, int oldVersion, int newVersion) {
-			// first db -> nothing to upgrade
+			// Cover source ordering/defaults changed: discard possibly stale or wrong artwork.
+			dbh.execSQL("DROP TABLE IF EXISTS "+TABLE_NAME);
+			onCreate(dbh);
 		}
 
 		/**
@@ -457,6 +459,18 @@ public class CoverCache {
 					}
 				}
 
+				if (inputStream == null && (CoverCache.mCoverLoadMode & CoverCache.COVER_MODE_INLINE) != 0) {
+					MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+					mmr.setDataSource(song.path);
+
+					byte[] data = mmr.getEmbeddedPicture();
+					if (data != null) {
+						sampleInputStream = new ByteArrayInputStream(data);
+						inputStream = new ByteArrayInputStream(data);
+					}
+					mmr.release();
+				}
+
 				if (inputStream == null && (CoverCache.mCoverLoadMode & CoverCache.COVER_MODE_ANDROID) != 0) {
 					ContentResolver res = ctx.getContentResolver();
 					long[] androidIds = MediaUtils.getAndroidMediaIds(ctx, song);
@@ -469,18 +483,6 @@ public class CoverCache {
 						if (sampleInputStream != null) // cache misses are VERY expensive here, so we check if the first open worked
 							inputStream = res.openInputStream(uri);
 					}
-				}
-
-				if (inputStream == null && (CoverCache.mCoverLoadMode & CoverCache.COVER_MODE_INLINE) != 0) {
-					MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-					mmr.setDataSource(song.path);
-
-					byte[] data = mmr.getEmbeddedPicture();
-					if (data != null) {
-						sampleInputStream = new ByteArrayInputStream(data);
-						inputStream = new ByteArrayInputStream(data);
-					}
-					mmr.release();
 				}
 
 				if (inputStream != null) {
