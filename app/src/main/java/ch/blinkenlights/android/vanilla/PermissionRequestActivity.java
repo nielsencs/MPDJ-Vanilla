@@ -99,12 +99,14 @@ public class PermissionRequestActivity extends Activity {
 		LayoutInflater inflater = LayoutInflater.from(activity);
 		View view = inflater.inflate(R.layout.permission_request, null, false);
 
-		view.setOnClickListener(new View.OnClickListener() {
+		View.OnClickListener requestPermission = new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				PermissionRequestActivity.requestPermissions(activity, intent);
 			}
-		});
+		};
+		view.setOnClickListener(requestPermission);
+		view.findViewById(R.id.permission_request_button).setOnClickListener(requestPermission);
 
 		ViewGroup parent = (ViewGroup)activity.findViewById(R.id.content); // main layout of library_content
 		parent.addView(view, -1);
@@ -145,9 +147,9 @@ public class PermissionRequestActivity extends Activity {
 
 	private static String[] getNeededPermissions() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-			return new String[] { Manifest.permission.READ_MEDIA_AUDIO, Manifest.permission.READ_MEDIA_IMAGES };
+			return new String[] { Manifest.permission.READ_MEDIA_AUDIO };
 		}
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 			return new String[] { Manifest.permission.READ_EXTERNAL_STORAGE };
 		}
 		return new String[] { Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE };

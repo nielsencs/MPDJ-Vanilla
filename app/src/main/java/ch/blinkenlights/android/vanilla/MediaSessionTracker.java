@@ -24,6 +24,7 @@ package ch.blinkenlights.android.vanilla;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v4.media.MediaMetadataCompat;
@@ -114,7 +115,6 @@ public class MediaSessionTracker {
 			.build();
 
 		if (song != null) {
-			final Bitmap cover = song.getMediumCover(mContext);
 			MediaMetadataCompat.Builder metadataBuilder = new MediaMetadataCompat.Builder()
 				.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, song.artist)
 				.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, song.album)
@@ -123,7 +123,12 @@ public class MediaSessionTracker {
 
 			boolean showCover = SharedPrefHelper.getSettings(mContext).getBoolean(PrefKeys.COVER_ON_LOCKSCREEN, PrefDefaults.COVER_ON_LOCKSCREEN);
 			if (showCover) {
+				Bitmap cover = song.getMediumCover(mContext);
+				if (cover == null) {
+					cover = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.fallback_cover_large);
+				}
 				metadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, cover);
+				metadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ART, cover);
 			}
 
 			// logic copied from FullPlaybackActivity.updateQueuePosition()

@@ -364,6 +364,13 @@ public class MediaSchema {
 		if (oldVersion < 20190210) {
 			dbh.execSQL(VIEW_CREATE_PLAYLISTS);
 		}
+
+		if (oldVersion < 20260705) {
+			// Album identity now includes album artist/artist as well as album title.
+			// Mark existing entries stale so the scanner rebuilds album ids without
+			// collapsing same-title albums by different artists into one album.
+			dbh.execSQL("UPDATE "+MediaLibrary.TABLE_SONGS+" SET mtime=1");
+		}
 	}
 
 }

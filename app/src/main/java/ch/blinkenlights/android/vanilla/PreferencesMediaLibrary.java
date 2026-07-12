@@ -28,6 +28,8 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Environment;
+
+import java.io.File;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -221,7 +223,10 @@ public class PreferencesMediaLibrary extends Fragment implements View.OnClickLis
 		switch (item.getItemId()) {
 		case MENU_DUMP_DB:
 			final Context context = getActivity();
-			final String path = Environment.getExternalStorageDirectory().getPath() + "/dbdump-" + context.getPackageName() + ".sqlite";
+			File dumpDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+			if (dumpDir == null)
+				dumpDir = context.getFilesDir();
+			final String path = new File(dumpDir, "dbdump-" + context.getPackageName() + ".sqlite").getPath();
 			final String msg = getString(R.string.dump_database_result, path);
 
 			MediaLibrary.createDebugDump(context, path);

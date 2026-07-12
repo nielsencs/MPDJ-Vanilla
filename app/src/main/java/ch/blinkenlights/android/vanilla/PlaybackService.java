@@ -1048,13 +1048,18 @@ public final class PlaybackService extends Service
 				if (mMediaPlayerInitialized)
 					mMediaPlayer.pause();
 
-				// We are switching into background mode. The notification will be removed
-				// unless we forcefully show it (or the user selected to always show it)
-				// In both cases we will update the notification to reflect the
-				// actual playback state (or to hit cancel() as this is required to
-				// get rid of it if it was created via notify())
-				boolean removeNotification = (mForceNotificationVisible == false && mNotificationVisibility != VISIBILITY_ALWAYS);
-				stopForeground(removeNotification);
+				if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+					// We are switching into background mode. The notification will be removed
+					// unless we forcefully show it (or the user selected to always show it).
+					// On Android 12 and newer, calling stopForeground() from the background
+					// path can trigger ForegroundServiceStartNotAllowedException when playback
+					// is paused by an external event such as a phone call ending.
+					boolean removeNotification = (mForceNotificationVisible == false && mNotificationVisibility != VISIBILITY_ALWAYS);
+					stopForeground(removeNotification);
+				}
+
+				// Update the notification to reflect the actual playback state (or to hit
+				// cancel() as this is required to get rid of it if it was created via notify()).
 				updateNotification();
 
 				// Delay entering deep sleep. This allows the headset
@@ -1242,11 +1247,15 @@ public final class PlaybackService extends Service
 	public int playPause(boolean forceNotification)
 	{
 		synchronized (mStateLock) {
-			mForceNotificationVisible = forceNotification;
-			if ((mState & FLAG_PLAYING) != 0)
+			if ((mState & FLAG_PLAYING) != 0) {
+				// A user pause should keep the Android media controls available,
+				// whether it came from the app, a widget, a headset button, or the notification.
+				mForceNotificationVisible = true;
 				return pause();
-			else
+			} else {
+				mForceNotificationVisible = forceNotification;
 				return play();
+			}
 		}
 	}
 
@@ -1412,6 +1421,8 @@ public final class PlaybackService extends Service
 
 		}
 
+		mRemoteControlClient.updateRemote(mCurrentSong, mState, mForceNotificationVisible);
+		mMediaSessionTracker.updateSession(mCurrentSong, mState);
 		updateNotification();
 
 	}

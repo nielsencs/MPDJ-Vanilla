@@ -1,5 +1,17 @@
 apply plugin: 'com.android.application'
 
+Properties signingProperties = new Properties()
+File signingPropertiesFile = rootProject.file('signing.properties')
+if (signingPropertiesFile.exists()) {
+    signingPropertiesFile.withInputStream { signingProperties.load(it) }
+}
+
+def signingValue = { name ->
+    signingProperties.getProperty(name) ?: System.getenv(name)
+}
+
+def hasReleaseSigning = ['MPDJ_RELEASE_STORE_FILE', 'MPDJ_RELEASE_STORE_PASSWORD', 'MPDJ_RELEASE_KEY_ALIAS', 'MPDJ_RELEASE_KEY_PASSWORD'].every { signingValue(it) }
+
 android {
     namespace 'ch.blinkenlights.android.vanilla'
 
@@ -16,11 +28,25 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            releaseSigning {
+                storeFile file(signingValue('MPDJ_RELEASE_STORE_FILE'))
+                storePassword signingValue('MPDJ_RELEASE_STORE_PASSWORD')
+                keyAlias signingValue('MPDJ_RELEASE_KEY_ALIAS')
+                keyPassword signingValue('MPDJ_RELEASE_KEY_PASSWORD')
+            }
+        }
+    }
+
     buildTypes {
         release {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             minifyEnabled true
             zipAlignEnabled true
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.releaseSigning
+            }
         }
     }
 

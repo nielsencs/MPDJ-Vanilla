@@ -37,7 +37,7 @@ public class PrefDefaults {
 	public static final Action  COVER_PRESS_ACTION = Action.Nothing;
 	public static final String  DEFAULT_ACTION_INT = "9";
 	public static final String  DEFAULT_PLAYLIST_ACTION = "3";
-	public static final boolean COVERLOADER_ANDROID = true;
+	public static final boolean COVERLOADER_ANDROID = false;
 	public static final boolean COVERLOADER_VANILLA = true;
 	public static final boolean COVERLOADER_SHADOW = true;
 	public static final boolean COVERLOADER_INLINE = true;

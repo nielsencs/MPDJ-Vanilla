@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources>
-  <string name="app_name">Vanila Muziko</string>
+  <string name="app_name">MPDJ Vanilla</string>
   <string name="ok">Bone</string>
   <string name="cancel">Nuligi</string>
   <!--Playback Activity (main screen)-->
@@ -167,7 +167,7 @@
   <string name="replaygain_untagged_debump_title">Por muzikaĵoj sen etikedo ReplayGain</string>
   <string name="replaygain_untagged_debump_summary">Malpliigi sonfortecon je</string>
   <string name="replaygain_preamp_note_title">Rimarko</string>
-  <string name="replaygain_preamp_note_content">Androido ne permesas al Vanila Muziko pliigi sonfortecon al &gt;100%. Tro alta valoro de antaŭ-plilaŭtigo povas rezultigi maloportunaĵojn dum aŭskultado de mallaŭta muziko.\n\nKonsilindaj valoroj estas:\n -3dB por mallaŭta kaj klasika muziko\n+3dB por sonregistraĵoj post jaro 2000</string>
+  <string name="replaygain_preamp_note_content">Androido ne permesas al MPDJ Vanilla pliigi sonfortecon al &gt;100%. Tro alta valoro de antaŭ-plilaŭtigo povas rezultigi maloportunaĵojn dum aŭskultado de mallaŭta muziko.\n\nKonsilindaj valoroj estas:\n -3dB por mallaŭta kaj klasika muziko\n+3dB por sonregistraĵoj post jaro 2000</string>
   <string name="readahead">Aktivigi antaŭlegon</string>
   <string name="readahead_summary">Antaŭlegi nune ludatan muzikaĵon. Tiu ĉi agordo povas ripari “sonajn pendiĝojn”. (kaŭzitajn de malrapida SD-karto)</string>
   <string name="equalizer">Ekvalizilo</string>
@@ -197,7 +197,7 @@
   <string name="disable_lockscreen_title">Malaktivigi ŝlos-ekranon</string>
   <string name="disable_lockscreen_summary">Ne permesi al la ŝlos-ekrano aktiviĝi ĉe ekrano de biblioteko aŭ ludado.</string>
   <string name="keep_screen_on_title">Teni ekranon enŝaltita</string>
-  <string name="keep_screen_on_summary">Ne malŝalti la ekranon kiam Vanila Muziko estas montrata</string>
+  <string name="keep_screen_on_summary">Ne malŝalti la ekranon kiam MPDJ Vanilla estas montrata</string>
   <string name="use_idle_timeout_title">Malŝalti dum neaktiveco</string>
   <string name="use_idle_timeout_summary">Kiam enŝaltita, ludado estos haltigita post agordita tempo de neaktiveco</string>
   <string name="idle_timeout_title">Templimo de neaktiveco</string>
@@ -292,7 +292,7 @@
   <string name="playlist_sync_folder_summary">Dosierujo por uzi por samtempigi ludlistojn</string>
   <string name="playlist_export_relative_paths_title">Elporti uzante relativajn dosierindikojn</string>
   <string name="playlist_export_relative_paths_summary">Dosier-indikoj interrilatigas al la dosierujo de ludlisto</string>
-  <string name="permission_request_summary">Vanila Muziko postulas permeson por legi SD-karton por vidigi vian muzikan bibliotekon</string>
+  <string name="permission_request_summary">MPDJ Vanilla postulas permeson por legi SD-karton por vidigi vian muzikan bibliotekon</string>
   <string name="reverse_sort">Ordigi inverse</string>
   <string name="share">Kunhavigi…</string>
   <string name="share_failed">Fiaskis kunhavigi dosieron</string>

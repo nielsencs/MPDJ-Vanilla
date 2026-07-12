@@ -583,8 +583,13 @@ public class MediaUtils {
 			if (songId > -2)
 				songId = -2; // must be less than -1 (-1 defines an empty song object)
 
+			long albumId = 0;
+			if (album != null) {
+				albumId = MediaLibrary.hash63((artist == null ? "" : artist) + "\n" + album);
+			}
+
 			// Build minimal fake-database entry for this file
-			Object[] objData = new Object[] { songId, path, "", "", "", 0, 0, 0, 0, 0, 0 };
+			Object[] objData = new Object[] { songId, path, "", "", "", albumId, 0, 0, 0, 0, 0 };
 
 			if (title != null)
 				objData[2] = title;
