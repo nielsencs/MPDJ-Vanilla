@@ -438,12 +438,11 @@ public class LibraryActivity
 		int type = intent.getIntExtra("type", MediaUtils.TYPE_INVALID);
 		long id = intent.getLongExtra("id", LibraryAdapter.INVALID_ID);
 		Limiter limiter = mPagerAdapter.mAdapters[type].buildLimiter(id);
-		Limiter current = mPagerAdapter.mAdapters[type].getLimiter();
-		if (type == MediaUtils.TYPE_ALBUM && current != null && current.type == MediaUtils.TYPE_ARTIST) {
-			String[] names = new String[current.names.length + limiter.names.length];
-			System.arraycopy(current.names, 0, names, 0, current.names.length);
-			System.arraycopy(limiter.names, 0, names, current.names.length, limiter.names.length);
-			limiter = new Limiter(MediaUtils.TYPE_ALBUM, names, limiter.data + " AND " + current.data);
+		if (type == MediaUtils.TYPE_ALBUM) {
+			SharedPreferences settings = SharedPrefHelper.getSettings(this);
+			boolean restrictToCurrentArtist = settings.getBoolean(PrefKeys.LIMIT_ALBUMS_TO_CURRENT_ARTIST, PrefDefaults.LIMIT_ALBUMS_TO_CURRENT_ARTIST);
+			Limiter current = mPagerAdapter.mAdapters[type].getLimiter();
+			limiter = AlbumLimiterPolicy.maybeRestrictAlbumToCurrentArtist(limiter, current, restrictToCurrentArtist);
 		}
 		int tab = mPagerAdapter.setLimiter(limiter);
 		if (tab == -1 || tab == mViewPager.getCurrentItem())
