@@ -114,7 +114,7 @@ public class CoverCache {
 	 * @return a bitmap or null if no artwork was found
 	 */
 	public Bitmap getCoverFromSong(Context ctx, Song song, int size) {
-		CoverKey key = new CoverCache.CoverKey(MediaUtils.TYPE_ALBUM, song.albumId, size);
+		CoverKey key = new CoverCache.CoverKey(MediaUtils.TYPE_SONG, song.id, size);
 		Bitmap cover = getStoredCover(key);
 		if (cover == null) {
 			cover = sBitmapDiskCache.createBitmap(ctx, song, size*size);
@@ -234,7 +234,7 @@ public class CoverCache {
 		 * @param cacheSize The maximal amount of disk space to use in bytes
 		 */
 		public BitmapDiskCache(Context context, long cacheSize) {
-			super(context, "covercache.db", null, 2 /* version */);
+			super(context, "covercache.db", null, 3 /* version */);
 			mCacheSize = cacheSize;
 		}
 
@@ -413,7 +413,19 @@ public class CoverCache {
 				InputStream inputStream = null;
 				InputStream sampleInputStream = null; // same as inputStream but used for getSampleSize
 
-				if ((CoverCache.mCoverLoadMode & CoverCache.COVER_MODE_VANILLA) != 0) {
+				if ((CoverCache.mCoverLoadMode & CoverCache.COVER_MODE_INLINE) != 0) {
+					MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+					mmr.setDataSource(song.path);
+
+					byte[] data = mmr.getEmbeddedPicture();
+					if (data != null) {
+						sampleInputStream = new ByteArrayInputStream(data);
+						inputStream = new ByteArrayInputStream(data);
+					}
+					mmr.release();
+				}
+
+				if (inputStream == null && (CoverCache.mCoverLoadMode & CoverCache.COVER_MODE_VANILLA) != 0) {
 					final File baseFile  = new File(song.path);  // File object of queried song
 					String bestMatchPath = null;                 // The best cover-path we found
 					int bestMatchIndex   = COVER_MATCHES.length; // The best cover-index/priority found
@@ -457,18 +469,6 @@ public class CoverCache {
 						inputStream = new FileInputStream(guessedFile);
 						sampleInputStream = new FileInputStream(guessedFile);
 					}
-				}
-
-				if (inputStream == null && (CoverCache.mCoverLoadMode & CoverCache.COVER_MODE_INLINE) != 0) {
-					MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-					mmr.setDataSource(song.path);
-
-					byte[] data = mmr.getEmbeddedPicture();
-					if (data != null) {
-						sampleInputStream = new ByteArrayInputStream(data);
-						inputStream = new ByteArrayInputStream(data);
-					}
-					mmr.release();
 				}
 
 				if (inputStream == null && (CoverCache.mCoverLoadMode & CoverCache.COVER_MODE_ANDROID) != 0) {
