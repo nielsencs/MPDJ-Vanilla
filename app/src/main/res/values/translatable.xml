@@ -257,6 +257,8 @@ THE SOFTWARE.
 
 	<string name="jump_to_enqueued_on_play_title">Jump to enqueued song on \'Play\'</string>
 	<string name="jump_to_enqueued_on_play_summary">If the requested song is already in the queue, jump to it instead of flushing the queue</string>
+	<string name="limit_albums_to_current_artist_title">Limit albums opened from Artists</string>
+	<string name="limit_albums_to_current_artist_summary">When opening an album after choosing an artist, show only that artist\'s tracks instead of the whole album</string>
 
 	<string name="coverloader_android_title">Load artwork from Android</string>
 	<string name="coverloader_android_summary">Query Androids internal media database for album artwork</string>

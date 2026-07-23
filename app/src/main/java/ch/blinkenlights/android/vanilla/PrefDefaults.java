@@ -81,5 +81,6 @@ public class PrefDefaults {
 	public static final String  PLAYLIST_SYNC_FOLDER = (new File(Environment.getExternalStorageDirectory(), "Playlists")).getAbsolutePath();
 	public static final boolean PLAYLIST_EXPORT_RELATIVE_PATHS = false;
 	public static final boolean JUMP_TO_ENQUEUED_ON_PLAY = true;
+	public static final boolean LIMIT_ALBUMS_TO_CURRENT_ARTIST = false;
 	public static final boolean DISABLE_GAPLESS_PLAYBACK = false;
 }

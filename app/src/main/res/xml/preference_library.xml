@@ -57,6 +57,11 @@ THE SOFTWARE.
 		android:title="@string/jump_to_enqueued_on_play_title"
 		android:summary="@string/jump_to_enqueued_on_play_summary"
 		android:defaultValue="true" />
+	<CheckBoxPreference
+		android:key="limit_albums_to_current_artist"
+		android:title="@string/limit_albums_to_current_artist_title"
+		android:summary="@string/limit_albums_to_current_artist_summary"
+		android:defaultValue="false" />
 	<PreferenceScreen
 		android:title="@string/filebrowser_start"
 		android:summary="@string/customize_filebrowser_start">
