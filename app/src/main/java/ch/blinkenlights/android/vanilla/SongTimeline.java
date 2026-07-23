@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2012 Christopher Eby <kreed@kreed.org>
- * Copyright (C) 2015-2019 Adrian Ulrich <adrian@blinkenlights.ch>
+ * Copyright (C) 2015-2021 Adrian Ulrich <adrian@blinkenlights.ch>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,10 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.util.Log;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -245,6 +249,10 @@ public final class SongTimeline {
 	 * The last song we added randomly by calling MediaUtils.getRandomSong()
 	 */
 	private Song mLastRandomSong;
+	/**
+	 * Snapshot of a previous queue incarnation, may be null.
+	 */
+	private byte[] mQueueSnapshot;
 
 	// for saveActiveSongs()
 	private Song mSavedPrevious;
@@ -476,7 +484,7 @@ public final class SongTimeline {
 			return;
 
 		synchronized (this) {
-			saveActiveSongs();
+			saveActiveSongs(true);
 			mShuffleMode = mode;
 			if (mode != SHUFFLE_NONE && mFinishAction != FINISH_RANDOM && !mSongs.isEmpty()) {
 				ArrayList<Song> songs = getShuffledTimeline(false);
@@ -496,7 +504,7 @@ public final class SongTimeline {
 	public void setFinishAction(int action)
 	{
 		synchronized (this) {
-			saveActiveSongs();
+			saveActiveSongs(false);
 
 			if (mFinishAction == FINISH_RANDOM) {
 				// Remove the last song if we are going out of RANDOM mode and we
@@ -547,7 +555,7 @@ public final class SongTimeline {
 	private void reshuffleTimeline()
 	{
 		synchronized (this) {
-			saveActiveSongs();
+			saveActiveSongs(true);
 			ArrayList<Song> songs = getShuffledTimeline(false);
 			int newPosition = songs.indexOf(mSavedCurrent);
 			Collections.swap(songs, newPosition, mCurrentPos);
@@ -652,7 +660,7 @@ public final class SongTimeline {
 	*/
 	public Song setCurrentQueuePosition(int pos) {
 		synchronized (this) {
-			saveActiveSongs();
+			saveActiveSongs(false);
 			mCurrentPos = pos;
 			broadcastChangedSongs();
 		}
@@ -772,7 +780,7 @@ public final class SongTimeline {
 
 		ArrayList<Song> timeline = mSongs;
 		synchronized (this) {
-			saveActiveSongs();
+			saveActiveSongs(true);
 
 			switch (mode) {
 			case MODE_ENQUEUE:
@@ -892,7 +900,7 @@ public final class SongTimeline {
 	public void clearQueue()
 	{
 		synchronized (this) {
-			saveActiveSongs();
+			saveActiveSongs(true);
 			if (mCurrentPos + 1 < mSongs.size())
 				mSongs.subList(mCurrentPos + 1, mSongs.size()).clear();
 			broadcastChangedSongs();
@@ -907,7 +915,7 @@ public final class SongTimeline {
 	public void emptyQueue()
 	{
 		synchronized (this) {
-			saveActiveSongs();
+			saveActiveSongs(true);
 			mSongs.clear();
 			mCurrentPos = 0;
 			broadcastChangedSongs();
@@ -917,12 +925,47 @@ public final class SongTimeline {
 	}
 
 	/**
+	 * Swaps the current queue with an old version
+	 */
+	public boolean revertQueueChange() {
+		synchronized (this) {
+			if (mQueueSnapshot == null)
+				return false;
+
+			try {
+				ByteArrayInputStream bais = new ByteArrayInputStream(mQueueSnapshot);
+				DataInputStream in = new DataInputStream(bais);
+				readState(in);
+				in.close();
+				mQueueSnapshot = null;
+			} catch (IOException e) {
+				Log.v("VanillaMusic", "Failed to read queue input: ", e);
+			}
+			broadcastChangedSongs();
+		}
+		changed();
+		return true;
+	}
+
+	/**
 	 * Save the active songs for use with broadcastChangedSongs().
 	 *
 	 * @see SongTimeline#broadcastChangedSongs()
 	 */
-	private void saveActiveSongs()
+	private void saveActiveSongs(boolean snapshot)
 	{
+		if (snapshot) {
+			try {
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				DataOutputStream out = new DataOutputStream(baos);
+				writeState(out);
+				out.close();
+				mQueueSnapshot = baos.toByteArray();
+			} catch (IOException e) {
+				Log.v("VanillaMusic", "Failed to snapshot queue: ", e);
+			}
+		}
+
 		mSavedPrevious = getSong(-1);
 		mSavedCurrent = getSong(0);
 		mSavedNext = getSong(+1);
@@ -963,7 +1006,7 @@ public final class SongTimeline {
 	public void removeSong(long id)
 	{
 		synchronized (this) {
-			saveActiveSongs();
+			saveActiveSongs(true);
 
 			ArrayList<Song> songs = mSongs;
 			ListIterator<Song> it = songs.listIterator();
@@ -996,7 +1039,7 @@ public final class SongTimeline {
 			if (songs.size() <= pos) // may happen if we race with purge()
 				return;
 
-			saveActiveSongs();
+			saveActiveSongs(true);
 
 			songs.remove(pos);
 			if (pos < mCurrentPos)
@@ -1021,7 +1064,7 @@ public final class SongTimeline {
 			if (songs.size() <= from || songs.size() <= to) // may happen if we race with purge()
 				return;
 
-			saveActiveSongs();
+			saveActiveSongs(true);
 
 			Song tmp = songs.remove(from);
 			songs.add(to, tmp);
