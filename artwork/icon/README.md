@@ -19,4 +19,10 @@ Run from the repository root:
 ./generate-pngs.sh
 ```
 
+The shell file is only a plain launcher for the Python implementation:
+
+```bash
+python3 generate-pngs.py
+```
+
 The script also regenerates inherited non-launcher drawable icons from `orig/drawable/*.svgz`, but MPDJ Vanilla launcher icons now come from the SVG files in this directory rather than from `orig/mipmap/*.svgz`.
