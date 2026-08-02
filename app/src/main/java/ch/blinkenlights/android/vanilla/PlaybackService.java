@@ -221,6 +221,7 @@ public final class PlaybackService extends Service
 	 * Save the current playlist state on queue changes after this time (in ms).
 	 */
 	private static final int SAVE_STATE_DELAY = 5000;
+	private static final int CROSSFADE_STEP_MS = 50;
 	/**
 	 * If set, music will play.
 	 */
@@ -437,6 +438,11 @@ public final class PlaybackService extends Service
 	 * Don't use gapless playback, useful for bug ridden devices.
 	 */
 	private boolean mDisableGaplessPlayback;
+	/**
+	 * Global MPDJ crossfade setting. 0 means disabled.
+	 */
+	private CrossfadeSettings mCrossfadeSettings = CrossfadeSettings.fromSeconds(PrefDefaults.CROSSFADE_SECONDS);
+	private long mCrossfadeStartUptime = -1;
 
 	@Override
 	public void onCreate()
@@ -482,6 +488,7 @@ public final class PlaybackService extends Service
 		mReplayGainBump = settings.getInt(PrefKeys.REPLAYGAIN_BUMP, PrefDefaults.REPLAYGAIN_BUMP);
 		mReplayGainUntaggedDeBump = settings.getInt(PrefKeys.REPLAYGAIN_UNTAGGED_DEBUMP, PrefDefaults.REPLAYGAIN_UNTAGGED_DEBUMP);
 		mDisableGaplessPlayback = settings.getBoolean(PrefKeys.DISABLE_GAPLESS_PLAYBACK, PrefDefaults.DISABLE_GAPLESS_PLAYBACK);
+		mCrossfadeSettings = CrossfadeSettings.fromSeconds(settings.getInt(PrefKeys.CROSSFADE_SECONDS, PrefDefaults.CROSSFADE_SECONDS));
 
 		mVolumeDuringDucking = settings.getInt(PrefKeys.VOLUME_DURING_DUCKING, PrefDefaults.VOLUME_DURING_DUCKING);
 		mIgnoreAudioFocusLoss = settings.getBoolean(PrefKeys.IGNORE_AUDIOFOCUS_LOSS, PrefDefaults.IGNORE_AUDIOFOCUS_LOSS);
@@ -790,6 +797,11 @@ public final class PlaybackService extends Service
 	 * re-creates a newone if needed.
 	 */
 	private void triggerGaplessUpdate() {
+		mHandler.removeMessages(MSG_CROSSFADE_STEP);
+		mCrossfadeStartUptime = -1;
+		mMediaPlayer.setCrossfadeFactor(1.0f);
+		mPreparedMediaPlayer.setCrossfadeFactor(1.0f);
+
 		if(mMediaPlayerInitialized != true)
 			return;
 
@@ -817,12 +829,17 @@ public final class PlaybackService extends Service
 					// it and set it as the next MP for the active media player
 					mPreparedMediaPlayer.reset();
 					prepareMediaPlayer(mPreparedMediaPlayer, nextSong.path);
-					mMediaPlayer.setNextMediaPlayer(mPreparedMediaPlayer);
+					if (!mCrossfadeSettings.isEnabled())
+						mMediaPlayer.setNextMediaPlayer(mPreparedMediaPlayer);
 				}
-				if(mMediaPlayer.hasNextMediaPlayer() == false) {
+				if(!mCrossfadeSettings.isEnabled() && mMediaPlayer.hasNextMediaPlayer() == false) {
 					// We can reuse the prepared MediaPlayer but the current instance lacks
 					// a link to it
 					mMediaPlayer.setNextMediaPlayer(mPreparedMediaPlayer);
+				}
+				if (mCrossfadeSettings.isEnabled()) {
+					mMediaPlayer.setNextMediaPlayer(null);
+					scheduleCrossfadeStart();
 				}
 			} catch (IOException | IllegalArgumentException e) {
 				Log.e("VanillaMusic", "Exception while preparing gapless media player: " + e);
@@ -834,6 +851,46 @@ public final class PlaybackService extends Service
 				mMediaPlayer.setNextMediaPlayer(null);
 				// There is no need to cleanup mPreparedMediaPlayer
 			}
+		}
+	}
+
+	private void scheduleCrossfadeStart() {
+		if ((mState & FLAG_PLAYING) == 0)
+			return;
+
+		int duration = getDuration();
+		int position = getPosition();
+		int crossfadeDuration = mCrossfadeSettings.getDurationMs();
+		if (duration <= 0 || position < 0)
+			return;
+
+		long delay = Math.max(0, duration - position - crossfadeDuration);
+		mCrossfadeStartUptime = SystemClock.elapsedRealtime() + delay;
+		mPreparedMediaPlayer.setCrossfadeFactor(0.0f);
+		mHandler.sendEmptyMessageDelayed(MSG_CROSSFADE_STEP, delay);
+	}
+
+	private void processCrossfadeStep() {
+		if (!mCrossfadeSettings.isEnabled() || mCrossfadeStartUptime == -1 || (mState & FLAG_PLAYING) == 0) {
+			mMediaPlayer.setCrossfadeFactor(1.0f);
+			mPreparedMediaPlayer.setCrossfadeFactor(1.0f);
+			mCrossfadeStartUptime = -1;
+			return;
+		}
+
+		int duration = mCrossfadeSettings.getDurationMs();
+		int elapsed = (int)(SystemClock.elapsedRealtime() - mCrossfadeStartUptime);
+		if (!mPreparedMediaPlayer.isPlaying()) {
+			mPreparedMediaPlayer.setCrossfadeFactor(0.0f);
+			mPreparedMediaPlayer.start();
+		}
+		mMediaPlayer.setCrossfadeFactor(CrossfadeVolume.fadeOutFactor(elapsed, duration));
+		mPreparedMediaPlayer.setCrossfadeFactor(CrossfadeVolume.fadeInFactor(elapsed, duration));
+
+		if (elapsed < duration) {
+			mHandler.sendEmptyMessageDelayed(MSG_CROSSFADE_STEP, CROSSFADE_STEP_MS);
+		} else {
+			mCrossfadeStartUptime = -1;
 		}
 	}
 
@@ -942,6 +999,8 @@ public final class PlaybackService extends Service
 				list.get(i).recreate();
 		} else if (PrefKeys.DISABLE_GAPLESS_PLAYBACK.equals(key)) {
 			mDisableGaplessPlayback = settings.getBoolean(PrefKeys.DISABLE_GAPLESS_PLAYBACK, PrefDefaults.DISABLE_GAPLESS_PLAYBACK);
+		} else if (PrefKeys.CROSSFADE_SECONDS.equals(key)) {
+			mCrossfadeSettings = CrossfadeSettings.fromSeconds(settings.getInt(PrefKeys.CROSSFADE_SECONDS, PrefDefaults.CROSSFADE_SECONDS));
 		}
 
 		/* Tell androids cloud-backup manager that we just changed our preferences */
@@ -1550,6 +1609,7 @@ public final class PlaybackService extends Service
 	 * The current song's playback position changed.
 	 */
 	private static final int MSG_BROADCAST_SEEK = 19;
+	private static final int MSG_CROSSFADE_STEP = 20;
 
 	@Override
 	public boolean handleMessage(Message message)
@@ -1613,6 +1673,9 @@ public final class PlaybackService extends Service
 			break;
 		case MSG_GAPLESS_UPDATE:
 			triggerGaplessUpdate();
+			break;
+		case MSG_CROSSFADE_STEP:
+			processCrossfadeStep();
 			break;
 		case MSG_UPDATE_PLAYCOUNTS:
 			Song song = (Song)message.obj;

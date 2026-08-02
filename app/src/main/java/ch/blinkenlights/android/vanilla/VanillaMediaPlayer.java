@@ -35,6 +35,7 @@ public class VanillaMediaPlayer extends MediaPlayer {
 	private boolean mHasNextMediaPlayer;
 	private float mReplayGain = Float.NaN;
 	private float mDuckingFactor = Float.NaN;
+	private float mCrossfadeFactor = 1.0f;
 	private boolean mIsDucking = false;
 
 	/**
@@ -51,6 +52,7 @@ public class VanillaMediaPlayer extends MediaPlayer {
 	public void reset() {
 		mDataSource = null;
 		mHasNextMediaPlayer = false;
+		mCrossfadeFactor = 1.0f;
 		super.reset();
 	}
 
@@ -151,6 +153,20 @@ public class VanillaMediaPlayer extends MediaPlayer {
 		mDuckingFactor = duckingFactor;
 		updateVolume();
 	}
+
+	/**
+	 * Sets the desired scaling for MPDJ crossfade. Must be between 0 and 1.
+	 */
+	public void setCrossfadeFactor(float crossfadeFactor) {
+		if (crossfadeFactor < 0.0f) {
+			crossfadeFactor = 0.0f;
+		} else if (crossfadeFactor > 1.0f) {
+			crossfadeFactor = 1.0f;
+		}
+		mCrossfadeFactor = crossfadeFactor;
+		updateVolume();
+	}
+
 	/**
 	 * Sets the volume, using the replay gain and ducking if appropriate
 	 */
@@ -162,6 +178,7 @@ public class VanillaMediaPlayer extends MediaPlayer {
 		if(mIsDucking && !Float.isNaN(mDuckingFactor)) {
 			volume *= mDuckingFactor;
 		}
+		volume *= mCrossfadeFactor;
 
 		setVolume(volume, volume);
 	}

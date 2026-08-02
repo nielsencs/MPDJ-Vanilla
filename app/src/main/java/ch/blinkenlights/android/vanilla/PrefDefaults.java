@@ -83,4 +83,5 @@ public class PrefDefaults {
 	public static final boolean JUMP_TO_ENQUEUED_ON_PLAY = true;
 	public static final boolean LIMIT_ALBUMS_TO_CURRENT_ARTIST = false;
 	public static final boolean DISABLE_GAPLESS_PLAYBACK = false;
+	public static final int     CROSSFADE_SECONDS = 0;
 }

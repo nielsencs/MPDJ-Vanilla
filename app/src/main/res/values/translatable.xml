@@ -207,6 +207,9 @@ THE SOFTWARE.
 
 	<string name="disable_gapless_playback_title">Disable Gapless Playback</string>
 	<string name="disable_gapless_playback_summary">Do not use Gapless Playback which might help with playback issues on devices with buggy firmware</string>
+	<string name="crossfade_seconds_title">Global crossfade</string>
+	<string name="crossfade_seconds_summary">Crossfade time:</string>
+	<string name="crossfade_seconds_disabled">Crossfade disabled</string>
 
 	<string name="readahead">Enable readahead</string>
 	<string name="readahead_summary">Readahead the currently playing track. This option may solve \'audio dropout\' issues. (caused by a slow SD card)</string>

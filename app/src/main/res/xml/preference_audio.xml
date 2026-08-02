@@ -48,6 +48,16 @@ THE SOFTWARE.
 		android:title="@string/disable_gapless_playback_title"
 		android:summary="@string/disable_gapless_playback_summary"
 		android:defaultValue="false" />
+	<ch.blinkenlights.android.vanilla.SeekBarPreference
+		android:key="crossfade_seconds"
+		android:dialogLayout="@layout/seekbar_pref"
+		android:title="@string/crossfade_seconds_title"
+		android:defaultValue="0"
+		vanilla:sbpSummaryText="@string/crossfade_seconds_summary"
+		vanilla:sbpSummaryFormat="%s %.0f seconds"
+		vanilla:sbpSummaryZeroText="@string/crossfade_seconds_disabled"
+		vanilla:sbpMaxValue="20"
+		/>
 	<CheckBoxPreference
 		android:key="headset_only"
 		android:title="@string/headset_only_title"
