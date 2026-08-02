@@ -23,7 +23,7 @@ function show(n) {
 <p>MPDJ Vanilla is a maintained, ad-free fork of Vanilla Music for playing local music on Android. It keeps the simple offline-player spirit of the original project while using a separate app identity for new public builds.</p>
 
 <p>
-<b>Version:</b> 0.1.6 MPDJ crossfade test build<br>
+<b>Version:</b> 0.1.7 MPDJ crossfade timing test build<br>
 <b>Source:</b> <a href='https://github.com/nielsencs/MPDJ-Vanilla'>https://github.com/nielsencs/MPDJ-Vanilla</a><br>
 <b>Original project:</b> <a href='https://github.com/vanilla-music/vanilla'>Vanilla Music</a><br>
 <b>Internet access:</b> none requested by the app
@@ -33,6 +33,10 @@ function show(n) {
 
 <b>Changelog</b> [<a href='javascript:show("changelog")'>show</a>]
 <pre id='changelog'>
+
+<b>0.1.7 MPDJ crossfade timing test build</b>
+- Watch current track position while playing so crossfade starts on the real transition path
+- Reschedule crossfade if the crossfade preference changes while music is already playing
 
 <b>0.1.6 MPDJ crossfade test build</b>
 - Add a global crossfade time preference under Audio settings
