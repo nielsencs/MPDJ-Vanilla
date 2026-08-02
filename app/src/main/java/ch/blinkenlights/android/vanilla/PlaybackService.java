@@ -881,9 +881,11 @@ public final class PlaybackService extends Service
 			return;
 		}
 
-		Log.i("VanillaMusic", "MPDJ crossfade start: duration=" + duration + " position=" + position + " crossfade=" + crossfadeDuration);
-		mCrossfadeStartUptime = SystemClock.elapsedRealtime();
-		mPreparedMediaPlayer.setCrossfadeFactor(0.0f);
+		int elapsedAtStart = CrossfadeTimingPolicy.elapsedAtStartMs(crossfadeDuration, remaining);
+		Log.i("VanillaMusic", "MPDJ crossfade start: duration=" + duration + " position=" + position
+				+ " remaining=" + remaining + " crossfade=" + crossfadeDuration + " elapsedAtStart=" + elapsedAtStart);
+		mCrossfadeStartUptime = SystemClock.elapsedRealtime() - elapsedAtStart;
+		mPreparedMediaPlayer.setCrossfadeFactor(CrossfadeVolume.fadeInFactor(elapsedAtStart, crossfadeDuration));
 		mHandler.sendEmptyMessage(MSG_CROSSFADE_STEP);
 	}
 
