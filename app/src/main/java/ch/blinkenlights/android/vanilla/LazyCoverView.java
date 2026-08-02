@@ -135,8 +135,8 @@ public class LazyCoverView extends ImageView
 				// This message was sent due to a cache miss, but the cover might got cached in the meantime
 				Bitmap bitmap = sBitmapLruCache.get(payload.key);
 				if (bitmap == null) {
-					if (payload.key.mediaType == MediaUtils.TYPE_SONG || payload.key.mediaType == MediaUtils.TYPE_ALBUM) {
-						// We only display real covers for queries using the album or song id as key
+					if (CoverArtPolicy.canUseRepresentativeSongCover(payload.key.mediaType)) {
+						// Display real covers for rows that can resolve to a representative song.
 						Song song = MediaUtils.getSongByTypeId(mContext, payload.key.mediaType, payload.key.mediaId);
 						if (song != null) {
 							bitmap = song.getSmallCover(mContext);

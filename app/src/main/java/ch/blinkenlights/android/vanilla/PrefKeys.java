@@ -81,4 +81,6 @@ public class PrefKeys {
 	public static final String LIMIT_ALBUMS_TO_CURRENT_ARTIST = "limit_albums_to_current_artist";
 	public static final String DISABLE_GAPLESS_PLAYBACK = "disable_gapless_playback";
 	public static final String CROSSFADE_SECONDS = "crossfade_seconds";
+	public static final String CROSSFADE_MANAGES_READAHEAD = "crossfade_manages_readahead";
+	public static final String CROSSFADE_PREVIOUS_READAHEAD = "crossfade_previous_readahead";
 }

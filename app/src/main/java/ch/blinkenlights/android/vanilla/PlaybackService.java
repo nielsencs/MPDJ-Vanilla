@@ -496,6 +496,7 @@ public final class PlaybackService extends Service
 		refreshDuckingValues();
 
 		mReadaheadEnabled = settings.getBoolean(PrefKeys.ENABLE_READAHEAD, PrefDefaults.ENABLE_READAHEAD);
+		applyCrossfadeReadaheadPolicy(settings);
 
 		mAutoPlPlaycounts = settings.getInt(PrefKeys.AUTOPLAYLIST_PLAYCOUNTS, PrefDefaults.AUTOPLAYLIST_PLAYCOUNTS);
 
@@ -915,11 +916,32 @@ public final class PlaybackService extends Service
 	 */
 	private void triggerReadAhead() {
 		Song song = mCurrentSong;
-		if((mState & FLAG_PLAYING) != 0 && song != null) {
+		if(mReadaheadEnabled && (mState & FLAG_PLAYING) != 0 && song != null) {
 			mReadahead.setSong(song);
 		} else {
 			mReadahead.pause();
 		}
+	}
+
+	private void applyCrossfadeReadaheadPolicy(SharedPreferences settings) {
+		CrossfadeReadaheadPolicy.Result result = CrossfadeReadaheadPolicy.apply(
+				mCrossfadeSettings.getSeconds(),
+				settings.getBoolean(PrefKeys.ENABLE_READAHEAD, PrefDefaults.ENABLE_READAHEAD),
+				settings.getBoolean(PrefKeys.CROSSFADE_MANAGES_READAHEAD, false),
+				settings.getBoolean(PrefKeys.CROSSFADE_PREVIOUS_READAHEAD, PrefDefaults.ENABLE_READAHEAD));
+
+		SharedPreferences.Editor editor = settings.edit();
+		editor.putBoolean(PrefKeys.ENABLE_READAHEAD, result.readaheadEnabled);
+		if (result.managementActive) {
+			editor.putBoolean(PrefKeys.CROSSFADE_MANAGES_READAHEAD, true);
+			editor.putBoolean(PrefKeys.CROSSFADE_PREVIOUS_READAHEAD, result.savedReadaheadEnabled);
+		} else {
+			editor.remove(PrefKeys.CROSSFADE_MANAGES_READAHEAD);
+			editor.remove(PrefKeys.CROSSFADE_PREVIOUS_READAHEAD);
+		}
+		editor.apply();
+		mReadaheadEnabled = result.readaheadEnabled;
+		triggerReadAhead();
 	}
 
 	/**
@@ -999,6 +1021,9 @@ public final class PlaybackService extends Service
 			mIgnoreAudioFocusLoss = settings.getBoolean(PrefKeys.IGNORE_AUDIOFOCUS_LOSS, PrefDefaults.IGNORE_AUDIOFOCUS_LOSS);
 		} else if (PrefKeys.ENABLE_READAHEAD.equals(key)) {
 			mReadaheadEnabled = settings.getBoolean(PrefKeys.ENABLE_READAHEAD, PrefDefaults.ENABLE_READAHEAD);
+			if (mCrossfadeSettings.isEnabled())
+				applyCrossfadeReadaheadPolicy(settings);
+			triggerReadAhead();
 		} else if (PrefKeys.AUTOPLAYLIST_PLAYCOUNTS.equals(key)) {
 			mAutoPlPlaycounts = settings.getInt(PrefKeys.AUTOPLAYLIST_PLAYCOUNTS, PrefDefaults.AUTOPLAYLIST_PLAYCOUNTS);
 		} else if (PrefKeys.PLAYLIST_SYNC_MODE.equals(key) || PrefKeys.PLAYLIST_SYNC_FOLDER.equals(key) || PrefKeys.PLAYLIST_EXPORT_RELATIVE_PATHS.equals(key)) {
@@ -1017,6 +1042,7 @@ public final class PlaybackService extends Service
 			mDisableGaplessPlayback = settings.getBoolean(PrefKeys.DISABLE_GAPLESS_PLAYBACK, PrefDefaults.DISABLE_GAPLESS_PLAYBACK);
 		} else if (PrefKeys.CROSSFADE_SECONDS.equals(key)) {
 			mCrossfadeSettings = CrossfadeSettings.fromSeconds(settings.getInt(PrefKeys.CROSSFADE_SECONDS, PrefDefaults.CROSSFADE_SECONDS));
+			applyCrossfadeReadaheadPolicy(settings);
 			if (mMediaPlayerInitialized)
 				mHandler.sendEmptyMessage(MSG_GAPLESS_UPDATE);
 		}

@@ -210,6 +210,7 @@ THE SOFTWARE.
 	<string name="crossfade_seconds_title">Global crossfade</string>
 	<string name="crossfade_seconds_summary">Crossfade time:</string>
 	<string name="crossfade_seconds_disabled">Crossfade disabled</string>
+	<string name="crossfade_readahead_note">Crossfade automatically enables readahead while active</string>
 
 	<string name="readahead">Enable readahead</string>
 	<string name="readahead_summary">Readahead the currently playing track. This option may solve \'audio dropout\' issues. (caused by a slow SD card)</string>
