@@ -223,6 +223,7 @@ public final class PlaybackService extends Service
 	private static final int SAVE_STATE_DELAY = 5000;
 	private static final int CROSSFADE_STEP_MS = 50;
 	private static final int CROSSFADE_WATCH_MS = 250;
+	private static final int CROSSFADE_WARMUP_MS = 1000;
 	/**
 	 * If set, music will play.
 	 */
@@ -876,6 +877,12 @@ public final class PlaybackService extends Service
 
 		int remaining = duration - position;
 		if (remaining > crossfadeDuration) {
+			if (CrossfadeWarmupPolicy.shouldWarmup(crossfadeDuration, remaining, CROSSFADE_WARMUP_MS, mPreparedMediaPlayer.isPlaying())) {
+				mPreparedMediaPlayer.setCrossfadeFactor(0.0f);
+				mPreparedMediaPlayer.start();
+				Log.i("VanillaMusic", "MPDJ crossfade warmup: duration=" + duration + " position=" + position
+						+ " remaining=" + remaining + " crossfade=" + crossfadeDuration);
+			}
 			long delay = Math.min(CROSSFADE_WATCH_MS, remaining - crossfadeDuration);
 			mHandler.sendEmptyMessageDelayed(MSG_CROSSFADE_WATCH, delay);
 			return;
