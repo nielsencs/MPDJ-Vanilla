@@ -27,20 +27,32 @@ public final class CrossfadeVolume {
 	}
 
 	public static float fadeOutFactor(int elapsedMs, int durationMs) {
-		return 1.0f - fadeInFactor(elapsedMs, durationMs);
+		if (durationMs <= 0) {
+			return 0.0f;
+		}
+		float ratio = (float)elapsedMs / (float)durationMs;
+		if (ratio < 0.0f) {
+			return 1.0f;
+		}
+		if (ratio > 1.0f) {
+			return 0.0f;
+		}
+		// Equal-power crossfade curve: cos(ratio * PI / 2)
+		return (float)Math.cos(ratio * Math.PI / 2.0);
 	}
 
 	public static float fadeInFactor(int elapsedMs, int durationMs) {
 		if (durationMs <= 0) {
 			return 1.0f;
 		}
-		float factor = (float)elapsedMs / (float)durationMs;
-		if (factor < 0.0f) {
+		float ratio = (float)elapsedMs / (float)durationMs;
+		if (ratio < 0.0f) {
 			return 0.0f;
 		}
-		if (factor > 1.0f) {
+		if (ratio > 1.0f) {
 			return 1.0f;
 		}
-		return factor;
+		// Equal-power crossfade curve: sin(ratio * PI / 2)
+		return (float)Math.sin(ratio * Math.PI / 2.0);
 	}
 }

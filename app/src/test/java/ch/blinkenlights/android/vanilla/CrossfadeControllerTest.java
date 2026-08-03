@@ -19,7 +19,9 @@ public class CrossfadeControllerTest {
 		assertTrue(controller.start(transition));
 		assertEquals(CrossfadeController.State.FADING, controller.getState());
 		assertEquals(0.0f, controller.fadeInFactor(transition, 3000), 0.0001f);
-		assertEquals(0.5f, controller.fadeInFactor(transition, 1500), 0.0001f);
+		// With equal-power crossfade, at midpoint (remaining 1500 of 3000):
+		// fadeInFactor = sin(1500 / 3000 * PI / 2) = sin(PI / 4) = sqrt(2)/2 ≈ 0.7071
+		assertEquals(0.7071f, controller.fadeInFactor(transition, 1500), 0.0001f);
 		assertEquals(1.0f, controller.fadeInFactor(transition, 0), 0.0001f);
 
 		assertTrue(controller.beginHandoff(transition));
