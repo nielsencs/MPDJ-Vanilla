@@ -23,7 +23,7 @@ function show(n) {
 <p>MPDJ Vanilla is a maintained, ad-free fork of Vanilla Music for playing local music on Android. It keeps the simple offline-player spirit of the original project while using a separate app identity for new public builds.</p>
 
 <p>
-<b>Version:</b> 0.1.10 MPDJ crossfade warm-up test build<br>
+<b>Version:</b> 0.1.11 MPDJ crossfade controller test build<br>
 <b>Source:</b> <a href='https://github.com/nielsencs/MPDJ-Vanilla'>https://github.com/nielsencs/MPDJ-Vanilla</a><br>
 <b>Original project:</b> <a href='https://github.com/vanilla-music/vanilla'>Vanilla Music</a><br>
 <b>Internet access:</b> none requested by the app
@@ -33,6 +33,13 @@ function show(n) {
 
 <b>Changelog</b> [<a href='javascript:show("changelog")'>show</a>]
 <pre id='changelog'>
+
+<b>0.1.11 MPDJ crossfade controller test build</b>
+- Replace layered short-fade timing/warm-up patches with one explicit crossfade state controller
+- Keep player preparation independent from the optional current-track readahead setting
+- Restore any readahead choice previously overridden by MPDJ crossfade
+- Reject stale transition messages and non-current player completion callbacks
+- Rearm crossfade only after asynchronous seeks complete
 
 <b>0.1.10 MPDJ crossfade warm-up test build</b>
 - Start the prepared next track muted just before the fade window, to prime Android audio output for short fades

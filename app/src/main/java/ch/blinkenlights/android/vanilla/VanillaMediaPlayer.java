@@ -37,6 +37,7 @@ public class VanillaMediaPlayer extends MediaPlayer {
 	private float mDuckingFactor = Float.NaN;
 	private float mCrossfadeFactor = 1.0f;
 	private boolean mIsDucking = false;
+	private volatile int mLifecycleGeneration;
 
 	/**
 	 * Constructs a new VanillaMediaPlayer class
@@ -50,6 +51,7 @@ public class VanillaMediaPlayer extends MediaPlayer {
 	 * Resets the media player to an unconfigured state
 	 */
 	public void reset() {
+		mLifecycleGeneration++;
 		mDataSource = null;
 		mHasNextMediaPlayer = false;
 		mCrossfadeFactor = 1.0f;
@@ -60,6 +62,7 @@ public class VanillaMediaPlayer extends MediaPlayer {
 	 * Releases the media player and frees any claimed AudioEffect
 	 */
 	public void release() {
+		mLifecycleGeneration++;
 		mDataSource = null;
 		mHasNextMediaPlayer = false;
 		super.release();
@@ -75,7 +78,16 @@ public class VanillaMediaPlayer extends MediaPlayer {
 		FileInputStream fis = new FileInputStream(path);
 		super.setDataSource(fis.getFD());
 		fis.close(); // this is OK according to the SDK documentation!
+		mLifecycleGeneration++;
 		mDataSource = path;
+	}
+
+	/**
+	 * Identifies the currently configured player lifecycle. Resetting or
+	 * assigning a new data source invalidates callbacks from older lifecycles.
+	 */
+	public int getLifecycleGeneration() {
+		return mLifecycleGeneration;
 	}
 
 	/**

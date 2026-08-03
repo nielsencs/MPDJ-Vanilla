@@ -75,8 +75,8 @@ import java.util.ArrayList;
  */
 public final class PlaybackService extends Service
 	implements Handler.Callback
-			 , MediaPlayer.OnCompletionListener
 			 , MediaPlayer.OnErrorListener
+			 , MediaPlayer.OnSeekCompleteListener
 			 , SharedPreferences.OnSharedPreferenceChangeListener
 			 , SongTimeline.Callback
 			 , SensorEventListener
@@ -223,7 +223,6 @@ public final class PlaybackService extends Service
 	private static final int SAVE_STATE_DELAY = 5000;
 	private static final int CROSSFADE_STEP_MS = 50;
 	private static final int CROSSFADE_WATCH_MS = 250;
-	private static final int CROSSFADE_WARMUP_MS = 1000;
 	/**
 	 * If set, music will play.
 	 */
@@ -444,7 +443,10 @@ public final class PlaybackService extends Service
 	 * Global MPDJ crossfade setting. 0 means disabled.
 	 */
 	private CrossfadeSettings mCrossfadeSettings = CrossfadeSettings.fromSeconds(PrefDefaults.CROSSFADE_SECONDS);
-	private long mCrossfadeStartUptime = -1;
+	private final CrossfadeController mCrossfadeController = new CrossfadeController();
+	private int mSeekGeneration;
+	private MediaPlayer mSeekPlayer;
+	private int mSeekTargetPosition;
 
 	@Override
 	public void onCreate()
@@ -468,6 +470,15 @@ public final class PlaybackService extends Service
 		mAudioManager = (AudioManager)getSystemService(AUDIO_SERVICE);
 
 		SharedPreferences settings = SharedPrefHelper.getSettings(this);
+		if (settings.getBoolean(PrefKeys.CROSSFADE_MANAGES_READAHEAD, false)) {
+			boolean previousReadahead = settings.getBoolean(
+					PrefKeys.CROSSFADE_PREVIOUS_READAHEAD, PrefDefaults.ENABLE_READAHEAD);
+			settings.edit()
+					.putBoolean(PrefKeys.ENABLE_READAHEAD, previousReadahead)
+					.remove(PrefKeys.CROSSFADE_MANAGES_READAHEAD)
+					.remove(PrefKeys.CROSSFADE_PREVIOUS_READAHEAD)
+					.commit();
+		}
 		settings.registerOnSharedPreferenceChangeListener(this);
 		mNotificationVisibility = Integer.parseInt(settings.getString(PrefKeys.NOTIFICATION_VISIBILITY, PrefDefaults.NOTIFICATION_VISIBILITY));
 		mScrobble = settings.getBoolean(PrefKeys.SCROBBLE, PrefDefaults.SCROBBLE);
@@ -497,7 +508,6 @@ public final class PlaybackService extends Service
 		refreshDuckingValues();
 
 		mReadaheadEnabled = settings.getBoolean(PrefKeys.ENABLE_READAHEAD, PrefDefaults.ENABLE_READAHEAD);
-		applyCrossfadeReadaheadPolicy(settings);
 
 		mAutoPlPlaycounts = settings.getInt(PrefKeys.AUTOPLAYLIST_PLAYCOUNTS, PrefDefaults.AUTOPLAYLIST_PLAYCOUNTS);
 
@@ -669,13 +679,16 @@ public final class PlaybackService extends Service
 	private VanillaMediaPlayer getNewMediaPlayer() {
 		VanillaMediaPlayer mp = new VanillaMediaPlayer(this);
 		mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
-		mp.setOnCompletionListener(this);
 		mp.setOnErrorListener(this);
+		mp.setOnSeekCompleteListener(this);
 		return mp;
 	}
 
 	public void prepareMediaPlayer(VanillaMediaPlayer mp, String path) throws IOException{
 		mp.setDataSource(path);
+		final int lifecycleGeneration = mp.getLifecycleGeneration();
+		mp.setOnCompletionListener(player -> enqueuePlayerCompletion(
+				(VanillaMediaPlayer)player, lifecycleGeneration));
 		mp.prepare();
 		applyReplayGain(mp);
 	}
@@ -800,11 +813,7 @@ public final class PlaybackService extends Service
 	 * re-creates a newone if needed.
 	 */
 	private void triggerGaplessUpdate() {
-		mHandler.removeMessages(MSG_CROSSFADE_STEP);
-		mHandler.removeMessages(MSG_CROSSFADE_WATCH);
-		mCrossfadeStartUptime = -1;
-		mMediaPlayer.setCrossfadeFactor(1.0f);
-		mPreparedMediaPlayer.setCrossfadeFactor(1.0f);
+		cancelCrossfadePlayback();
 
 		if(mMediaPlayerInitialized != true)
 			return;
@@ -843,7 +852,8 @@ public final class PlaybackService extends Service
 				}
 				if (mCrossfadeSettings.isEnabled()) {
 					mMediaPlayer.setNextMediaPlayer(null);
-					scheduleCrossfadeWatch();
+					int transition = mCrossfadeController.arm(mCrossfadeSettings.getDurationMs());
+					scheduleCrossfadeWatch(transition);
 				}
 			} catch (IOException | IllegalArgumentException e) {
 				Log.e("VanillaMusic", "Exception while preparing gapless media player: " + e);
@@ -858,16 +868,35 @@ public final class PlaybackService extends Service
 		}
 	}
 
-	private void scheduleCrossfadeWatch() {
+	private void cancelCrossfadePlayback() {
+		boolean stopPrepared = mCrossfadeController.isFading() && mPreparedMediaPlayer.isPlaying();
+		mHandler.removeMessages(MSG_CROSSFADE_STEP);
+		mHandler.removeMessages(MSG_CROSSFADE_WATCH);
+		mCrossfadeController.cancel();
+		if (mMediaPlayer.getDataSource() != null)
+			mMediaPlayer.setCrossfadeFactor(1.0f);
+		if (stopPrepared) {
+			mPreparedMediaPlayer.stop();
+			mPreparedMediaPlayer.reset();
+		} else if (mPreparedMediaPlayer.getDataSource() != null) {
+			mPreparedMediaPlayer.setCrossfadeFactor(1.0f);
+		}
+	}
+
+	private void scheduleCrossfadeWatch(int transition) {
 		if ((mState & FLAG_PLAYING) == 0)
 			return;
 		mHandler.removeMessages(MSG_CROSSFADE_WATCH);
-		mHandler.sendEmptyMessage(MSG_CROSSFADE_WATCH);
+		mHandler.sendMessage(mHandler.obtainMessage(MSG_CROSSFADE_WATCH, transition, 0));
 	}
 
-	private void processCrossfadeWatch() {
-		if (!mCrossfadeSettings.isEnabled() || (mState & FLAG_PLAYING) == 0 || mPreparedMediaPlayer.getDataSource() == null)
+	private void processCrossfadeWatch(int transition) {
+		if (!mCrossfadeController.isCurrent(transition))
 			return;
+		if (!mCrossfadeSettings.isEnabled() || (mState & FLAG_PLAYING) == 0 || mPreparedMediaPlayer.getDataSource() == null) {
+			cancelCrossfadePlayback();
+			return;
+		}
 
 		int duration = getDuration();
 		int position = getPosition();
@@ -876,48 +905,34 @@ public final class PlaybackService extends Service
 			return;
 
 		int remaining = duration - position;
-		if (remaining > crossfadeDuration) {
-			if (CrossfadeWarmupPolicy.shouldWarmup(crossfadeDuration, remaining, CROSSFADE_WARMUP_MS, mPreparedMediaPlayer.isPlaying())) {
-				mPreparedMediaPlayer.setCrossfadeFactor(0.0f);
-				mPreparedMediaPlayer.start();
-				Log.i("VanillaMusic", "MPDJ crossfade warmup: duration=" + duration + " position=" + position
-						+ " remaining=" + remaining + " crossfade=" + crossfadeDuration);
-			}
+		if (!mCrossfadeController.shouldStart(transition, remaining)) {
 			long delay = Math.min(CROSSFADE_WATCH_MS, remaining - crossfadeDuration);
-			mHandler.sendEmptyMessageDelayed(MSG_CROSSFADE_WATCH, delay);
+			mHandler.sendMessageDelayed(mHandler.obtainMessage(MSG_CROSSFADE_WATCH, transition, 0), Math.max(1, delay));
 			return;
 		}
 
-		int elapsedAtStart = CrossfadeTimingPolicy.elapsedAtStartMs(crossfadeDuration, remaining);
-		Log.i("VanillaMusic", "MPDJ crossfade start: duration=" + duration + " position=" + position
-				+ " remaining=" + remaining + " crossfade=" + crossfadeDuration + " elapsedAtStart=" + elapsedAtStart);
-		mCrossfadeStartUptime = SystemClock.elapsedRealtime() - elapsedAtStart;
-		mPreparedMediaPlayer.setCrossfadeFactor(CrossfadeVolume.fadeInFactor(elapsedAtStart, crossfadeDuration));
-		mHandler.sendEmptyMessage(MSG_CROSSFADE_STEP);
+		if (!mCrossfadeController.start(transition))
+			return;
+		mPreparedMediaPlayer.setCrossfadeFactor(0.0f);
+		mPreparedMediaPlayer.start();
+		Log.i("MPDJ-XF", "start transition=" + transition + " remaining=" + remaining
+				+ " duration=" + crossfadeDuration);
+		mHandler.sendMessage(mHandler.obtainMessage(MSG_CROSSFADE_STEP, transition, 0));
 	}
 
-	private void processCrossfadeStep() {
-		if (!mCrossfadeSettings.isEnabled() || mCrossfadeStartUptime == -1 || (mState & FLAG_PLAYING) == 0) {
-			mMediaPlayer.setCrossfadeFactor(1.0f);
-			mPreparedMediaPlayer.setCrossfadeFactor(1.0f);
-			mCrossfadeStartUptime = -1;
+	private void processCrossfadeStep(int transition) {
+		if (!mCrossfadeController.isCurrent(transition))
+			return;
+		if (!mCrossfadeSettings.isEnabled() || !mCrossfadeController.isFading() || (mState & FLAG_PLAYING) == 0) {
+			cancelCrossfadePlayback();
 			return;
 		}
 
-		int duration = mCrossfadeSettings.getDurationMs();
-		int elapsed = (int)(SystemClock.elapsedRealtime() - mCrossfadeStartUptime);
-		if (!mPreparedMediaPlayer.isPlaying()) {
-			mPreparedMediaPlayer.setCrossfadeFactor(0.0f);
-			mPreparedMediaPlayer.start();
-		}
-		mMediaPlayer.setCrossfadeFactor(CrossfadeVolume.fadeOutFactor(elapsed, duration));
-		mPreparedMediaPlayer.setCrossfadeFactor(CrossfadeVolume.fadeInFactor(elapsed, duration));
-
-		if (elapsed < duration) {
-			mHandler.sendEmptyMessageDelayed(MSG_CROSSFADE_STEP, CROSSFADE_STEP_MS);
-		} else {
-			mCrossfadeStartUptime = -1;
-		}
+		int remaining = Math.max(0, getDuration() - getPosition());
+		mMediaPlayer.setCrossfadeFactor(mCrossfadeController.fadeOutFactor(transition, remaining));
+		mPreparedMediaPlayer.setCrossfadeFactor(mCrossfadeController.fadeInFactor(transition, remaining));
+		if (remaining > 0)
+			mHandler.sendMessageDelayed(mHandler.obtainMessage(MSG_CROSSFADE_STEP, transition, 0), CROSSFADE_STEP_MS);
 	}
 
 	/**
@@ -932,26 +947,6 @@ public final class PlaybackService extends Service
 		}
 	}
 
-	private void applyCrossfadeReadaheadPolicy(SharedPreferences settings) {
-		CrossfadeReadaheadPolicy.Result result = CrossfadeReadaheadPolicy.apply(
-				mCrossfadeSettings.getSeconds(),
-				settings.getBoolean(PrefKeys.ENABLE_READAHEAD, PrefDefaults.ENABLE_READAHEAD),
-				settings.getBoolean(PrefKeys.CROSSFADE_MANAGES_READAHEAD, false),
-				settings.getBoolean(PrefKeys.CROSSFADE_PREVIOUS_READAHEAD, PrefDefaults.ENABLE_READAHEAD));
-
-		SharedPreferences.Editor editor = settings.edit();
-		editor.putBoolean(PrefKeys.ENABLE_READAHEAD, result.readaheadEnabled);
-		if (result.managementActive) {
-			editor.putBoolean(PrefKeys.CROSSFADE_MANAGES_READAHEAD, true);
-			editor.putBoolean(PrefKeys.CROSSFADE_PREVIOUS_READAHEAD, result.savedReadaheadEnabled);
-		} else {
-			editor.remove(PrefKeys.CROSSFADE_MANAGES_READAHEAD);
-			editor.remove(PrefKeys.CROSSFADE_PREVIOUS_READAHEAD);
-		}
-		editor.apply();
-		mReadaheadEnabled = result.readaheadEnabled;
-		triggerReadAhead();
-	}
 
 	/**
 	 * Setup the accelerometer.
@@ -1030,8 +1025,6 @@ public final class PlaybackService extends Service
 			mIgnoreAudioFocusLoss = settings.getBoolean(PrefKeys.IGNORE_AUDIOFOCUS_LOSS, PrefDefaults.IGNORE_AUDIOFOCUS_LOSS);
 		} else if (PrefKeys.ENABLE_READAHEAD.equals(key)) {
 			mReadaheadEnabled = settings.getBoolean(PrefKeys.ENABLE_READAHEAD, PrefDefaults.ENABLE_READAHEAD);
-			if (mCrossfadeSettings.isEnabled())
-				applyCrossfadeReadaheadPolicy(settings);
 			triggerReadAhead();
 		} else if (PrefKeys.AUTOPLAYLIST_PLAYCOUNTS.equals(key)) {
 			mAutoPlPlaycounts = settings.getInt(PrefKeys.AUTOPLAYLIST_PLAYCOUNTS, PrefDefaults.AUTOPLAYLIST_PLAYCOUNTS);
@@ -1051,7 +1044,6 @@ public final class PlaybackService extends Service
 			mDisableGaplessPlayback = settings.getBoolean(PrefKeys.DISABLE_GAPLESS_PLAYBACK, PrefDefaults.DISABLE_GAPLESS_PLAYBACK);
 		} else if (PrefKeys.CROSSFADE_SECONDS.equals(key)) {
 			mCrossfadeSettings = CrossfadeSettings.fromSeconds(settings.getInt(PrefKeys.CROSSFADE_SECONDS, PrefDefaults.CROSSFADE_SECONDS));
-			applyCrossfadeReadaheadPolicy(settings);
 			if (mMediaPlayerInitialized)
 				mHandler.sendEmptyMessage(MSG_GAPLESS_UPDATE);
 		}
@@ -1138,8 +1130,10 @@ public final class PlaybackService extends Service
 					mMediaPlayerAudioFxActive = true;
 				}
 
-				if (mMediaPlayerInitialized)
+				if (mMediaPlayerInitialized) {
 					mMediaPlayer.start();
+					mHandler.sendEmptyMessage(MSG_GAPLESS_UPDATE);
+				}
 
 				// Update the notification with the current song information.
 				startForeground(NOTIFICATION_ID, createNotification(mCurrentSong, mState));
@@ -1157,6 +1151,7 @@ public final class PlaybackService extends Service
 					// Don't have WAKE_LOCK permission
 				}
 			} else {
+				cancelCrossfadePlayback();
 				if (mMediaPlayerInitialized)
 					mMediaPlayer.pause();
 
@@ -1440,6 +1435,9 @@ public final class PlaybackService extends Service
 	{
 		if (mMediaPlayer == null)
 			return null;
+		if (mCrossfadeController.getState() != CrossfadeController.State.IDLE
+				&& mCrossfadeController.getState() != CrossfadeController.State.HANDOFF)
+			cancelCrossfadePlayback();
 
 		if (mMediaPlayer.isPlaying())
 			mMediaPlayer.stop();
@@ -1539,9 +1537,26 @@ public final class PlaybackService extends Service
 
 	}
 
-	@Override
-	public void onCompletion(MediaPlayer player)
+	private void enqueuePlayerCompletion(VanillaMediaPlayer player, int lifecycleGeneration)
 	{
+		mHandler.sendMessage(mHandler.obtainMessage(
+				MSG_PLAYER_COMPLETED, lifecycleGeneration, 0, player));
+	}
+
+	private void processPlayerCompletion(int lifecycleGeneration, VanillaMediaPlayer player)
+	{
+		if (player != mMediaPlayer || lifecycleGeneration != player.getLifecycleGeneration()) {
+			Log.w("MPDJ-XF", "Ignoring stale or non-current player completion");
+			return;
+		}
+
+		if (mCrossfadeController.isFading()) {
+			int transition = mCrossfadeController.getGeneration();
+			mCrossfadeController.beginHandoff(transition);
+			mMediaPlayer.setCrossfadeFactor(0.0f);
+			mPreparedMediaPlayer.setCrossfadeFactor(1.0f);
+			Log.i("MPDJ-XF", "handoff transition=" + transition);
+		}
 
 		// Count this song as played
 		mHandler.sendMessageDelayed(mHandler.obtainMessage(MSG_UPDATE_PLAYCOUNTS, 1, 0, mCurrentSong), 800);
@@ -1664,6 +1679,8 @@ public final class PlaybackService extends Service
 	private static final int MSG_BROADCAST_SEEK = 19;
 	private static final int MSG_CROSSFADE_WATCH = 20;
 	private static final int MSG_CROSSFADE_STEP = 21;
+	private static final int MSG_PLAYER_COMPLETED = 22;
+	private static final int MSG_SEEK_COMPLETED = 23;
 
 	@Override
 	public boolean handleMessage(Message message)
@@ -1729,10 +1746,16 @@ public final class PlaybackService extends Service
 			triggerGaplessUpdate();
 			break;
 		case MSG_CROSSFADE_WATCH:
-			processCrossfadeWatch();
+			processCrossfadeWatch(message.arg1);
 			break;
 		case MSG_CROSSFADE_STEP:
-			processCrossfadeStep();
+			processCrossfadeStep(message.arg1);
+			break;
+		case MSG_PLAYER_COMPLETED:
+			processPlayerCompletion(message.arg1, (VanillaMediaPlayer)message.obj);
+			break;
+		case MSG_SEEK_COMPLETED:
+			processSeekComplete(message.arg1, (MediaPlayer)message.obj);
 			break;
 		case MSG_UPDATE_PLAYCOUNTS:
 			Song song = (Song)message.obj;
@@ -1831,8 +1854,27 @@ public final class PlaybackService extends Service
 		if (!mMediaPlayerInitialized) {
 			return;
 		}
+		if (mCrossfadeController.getState() != CrossfadeController.State.IDLE)
+			cancelCrossfadePlayback();
+		mSeekGeneration++;
+		mSeekPlayer = mMediaPlayer;
+		mSeekTargetPosition = msec;
 		mMediaPlayer.seekTo(msec);
 		mHandler.sendEmptyMessage(MSG_BROADCAST_SEEK);
+	}
+
+	@Override
+	public void onSeekComplete(MediaPlayer player) {
+		mHandler.sendMessage(mHandler.obtainMessage(MSG_SEEK_COMPLETED, mSeekGeneration, 0, player));
+	}
+
+	private void processSeekComplete(int generation, MediaPlayer player) {
+		if (generation != mSeekGeneration || player != mMediaPlayer || player != mSeekPlayer)
+			return;
+		if (Math.abs(player.getCurrentPosition() - mSeekTargetPosition) > 1000)
+			return;
+		mSeekPlayer = null;
+		mHandler.sendEmptyMessage(MSG_GAPLESS_UPDATE);
 	}
 
 	@Override

@@ -52,7 +52,6 @@ THE SOFTWARE.
 		android:key="crossfade_seconds"
 		android:dialogLayout="@layout/seekbar_pref"
 		android:title="@string/crossfade_seconds_title"
-		android:summary="@string/crossfade_readahead_note"
 		android:defaultValue="0"
 		vanilla:sbpSummaryText="@string/crossfade_seconds_summary"
 		vanilla:sbpSummaryFormat="%s %.0f seconds"
