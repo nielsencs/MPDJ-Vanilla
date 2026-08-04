@@ -23,11 +23,11 @@ android {
     compileSdkVersion rootProject.ext.compileSdkVersion
 
     defaultConfig {
-        applicationId "uk.co.biblestudyman.mpdj.vanilla"
+        applicationId "uk.co.biblestudyman.mpdj.vanilla.jules"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 13201
-        versionName "1.3.2-jules.1"
+        versionName "1.3.2-jules.2"
     }
 
     signingConfigs {
