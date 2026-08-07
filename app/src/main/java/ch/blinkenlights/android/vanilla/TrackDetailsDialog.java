@@ -84,6 +84,7 @@ public class TrackDetailsDialog extends DialogFragment {
 		final TextView composerView = view.findViewById(R.id.composer);
 		final TextView pathView = view.findViewById(R.id.path);
 		final TextView formatView = view.findViewById(R.id.format);
+		final TextView mpdjInfoView = view.findViewById(R.id.mpdj_info);
 
 		final long songId = getArguments().getLong(SONG_ID);
 		Handler handler = new Handler(mHandlerThread.getLooper());
@@ -95,6 +96,7 @@ public class TrackDetailsDialog extends DialogFragment {
 					return;
 				}
 				final MediaMetadataExtractor metadata = new MediaMetadataExtractor(song.path);
+				final MpdjInstructions instructions = MpdjInstructions.loadForPath(song.path);
 
 				getActivity().runOnUiThread(new Runnable() {
 					@Override
@@ -108,6 +110,30 @@ public class TrackDetailsDialog extends DialogFragment {
 						composerView.setText(metadata.getFirst(MediaMetadataExtractor.COMPOSER));
 						pathView.setText(song.path);
 						formatView.setText(metadata.getFormat());
+
+						if (instructions != null) {
+							String info = "Active:\n" +
+									"• Start: " + (instructions.startOffsetMs / 1000.0) + "s\n" +
+									"• End: " + (instructions.endOffsetMs > 0 ? (instructions.endOffsetMs / 1000.0) + "s" : "End") + "\n" +
+									"• Fade In: " + (instructions.fadeInMs / 1000.0) + "s\n" +
+									"• Fade Out: " + (instructions.fadeOutMs / 1000.0) + "s\n" +
+									"• Loops: " + instructions.loops.size();
+							mpdjInfoView.setText(info);
+						} else {
+							String info = "No companion .mpdj file found.\n" +
+									"Create one next to your song with suffix .mpdj\n\n" +
+									"Sample content:\n" +
+									"{\n" +
+									"  \"startOffsetMs\": 3730,\n" +
+									"  \"endOffsetMs\": -1,\n" +
+									"  \"fadeInMs\": 11270,\n" +
+									"  \"fadeOutMs\": 5000,\n" +
+									"  \"loops\": [\n" +
+									"    { \"pointA\": 264700, \"pointB\": 322000, \"count\": 2 }\n" +
+									"  ]\n" +
+									"}";
+							mpdjInfoView.setText(info);
+						}
 					}
 				});
 			}

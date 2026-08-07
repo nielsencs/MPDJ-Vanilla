@@ -104,4 +104,13 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 			android:gravity="right" />
 		<TextView android:id="@+id/format" android:textColor="?overlay_foreground_color" />
 	</TableRow>
+
+	<TableRow>
+		<TextView
+			android:text="MPDJ Edit"
+			android:textColor="?overlay_foreground_color"
+			android:paddingRight="5dip"
+			android:gravity="right" />
+		<TextView android:id="@+id/mpdj_info" android:textColor="?overlay_foreground_color" />
+	</TableRow>
 </merge>

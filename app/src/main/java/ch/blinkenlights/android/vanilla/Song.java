@@ -184,6 +184,18 @@ public class Song implements Comparable<Song> {
 		id = cursor.getLong(0);
 		path = cursor.getString(1);
 		title = cursor.getString(2);
+		if (path != null) {
+			java.io.File file = new java.io.File(path + ".mpdj");
+			if (!file.exists()) {
+				int dotIndex = path.lastIndexOf('.');
+				if (dotIndex > 0) {
+					file = new java.io.File(path.substring(0, dotIndex) + ".mpdj");
+				}
+			}
+			if (file.exists()) {
+				title += " (MPDJ)";
+			}
+		}
 		album = cursor.getString(3);
 		artist = cursor.getString(4);
 		albumId = cursor.getLong(5);

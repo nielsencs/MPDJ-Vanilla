@@ -444,6 +444,7 @@ public final class PlaybackService extends Service
 	 */
 	private CrossfadeSettings mCrossfadeSettings = CrossfadeSettings.fromSeconds(PrefDefaults.CROSSFADE_SECONDS);
 	private final CrossfadeController mCrossfadeController = new CrossfadeController();
+	private MpdjInstructions mMpdjInstructions;
 	private int mSeekGeneration;
 	private MediaPlayer mSeekPlayer;
 	private int mSeekTargetPosition;
@@ -935,6 +936,72 @@ public final class PlaybackService extends Service
 			mHandler.sendMessageDelayed(mHandler.obtainMessage(MSG_CROSSFADE_STEP, transition, 0), CROSSFADE_STEP_MS);
 	}
 
+	private void scheduleMpdjTick() {
+		if ((mState & FLAG_PLAYING) == 0 || mMpdjInstructions == null)
+			return;
+		mHandler.removeMessages(MSG_MPDJ_TICK);
+		mHandler.sendEmptyMessageDelayed(MSG_MPDJ_TICK, 50);
+	}
+
+	private void processMpdjTick() {
+		if ((mState & FLAG_PLAYING) == 0 || mMpdjInstructions == null || mMediaPlayer == null || !mMediaPlayerInitialized)
+			return;
+
+		int position;
+		int duration;
+		try {
+			position = mMediaPlayer.getCurrentPosition();
+			duration = mMediaPlayer.getDuration();
+		} catch (Exception e) {
+			scheduleMpdjTick();
+			return;
+		}
+
+		// 1. Loop points check
+		boolean looped = false;
+		for (MpdjInstructions.Loop loop : mMpdjInstructions.loops) {
+			if (loop.remainingCount > 0 && position >= loop.pointB) {
+				loop.remainingCount--;
+				mMediaPlayer.seekTo(loop.pointA);
+				Log.i("MPDJ-XF", "Looping back from " + loop.pointB + " to " + loop.pointA + ". Remaining loops: " + loop.remainingCount);
+				looped = true;
+				break;
+			}
+		}
+
+		if (looped) {
+			scheduleMpdjTick();
+			return;
+		}
+
+		// 2. Early cut/end check
+		if (mMpdjInstructions.endOffsetMs > 0 && position >= mMpdjInstructions.endOffsetMs) {
+			mMediaPlayer.pause();
+			Log.i("MPDJ-XF", "Early cut reached at " + position + " ms. Moving to next song.");
+			processPlayerCompletion(mMediaPlayer.getLifecycleGeneration(), mMediaPlayer);
+			return;
+		}
+
+		// 3. Volume fades
+		float factor = 1.0f;
+		if (mMpdjInstructions.fadeInMs > 0) {
+			int elapsed = position - mMpdjInstructions.startOffsetMs;
+			if (elapsed >= 0 && elapsed < mMpdjInstructions.fadeInMs) {
+				factor = Math.min(factor, CrossfadeVolume.fadeInFactor(elapsed, mMpdjInstructions.fadeInMs));
+			}
+		}
+		if (mMpdjInstructions.fadeOutMs > 0) {
+			int endOffset = mMpdjInstructions.endOffsetMs > 0 ? mMpdjInstructions.endOffsetMs : duration;
+			int remaining = endOffset - position;
+			if (remaining >= 0 && remaining < mMpdjInstructions.fadeOutMs) {
+				factor = Math.min(factor, CrossfadeVolume.fadeInFactor(remaining, mMpdjInstructions.fadeOutMs));
+			}
+		}
+		mMediaPlayer.setCrossfadeFactor(factor);
+
+		scheduleMpdjTick();
+	}
+
 	/**
 	 * Stops or starts the readahead thread
 	 */
@@ -1133,6 +1200,7 @@ public final class PlaybackService extends Service
 				if (mMediaPlayerInitialized) {
 					mMediaPlayer.start();
 					mHandler.sendEmptyMessage(MSG_GAPLESS_UPDATE);
+					scheduleMpdjTick();
 				}
 
 				// Update the notification with the current song information.
@@ -1152,6 +1220,7 @@ public final class PlaybackService extends Service
 				}
 			} else {
 				cancelCrossfadePlayback();
+				mHandler.removeMessages(MSG_MPDJ_TICK);
 				if (mMediaPlayerInitialized)
 					mMediaPlayer.pause();
 
@@ -1433,6 +1502,7 @@ public final class PlaybackService extends Service
 	 */
 	private Song setCurrentSong(int delta)
 	{
+		mMpdjInstructions = null;
 		if (mMediaPlayer == null)
 			return null;
 		if (mCrossfadeController.getState() != CrossfadeController.State.IDLE
@@ -1494,6 +1564,17 @@ public final class PlaybackService extends Service
 			}
 
 
+			mMpdjInstructions = MpdjInstructions.loadForPath(song.path);
+			if (mMpdjInstructions != null) {
+				if (mMpdjInstructions.startOffsetMs > 0 && mPendingSeek == 0) {
+					mPendingSeekSong = song.id;
+					mPendingSeek = mMpdjInstructions.startOffsetMs;
+				}
+				if (mMpdjInstructions.fadeInMs > 0) {
+					mMediaPlayer.setCrossfadeFactor(0.0f);
+				}
+			}
+
 			mMediaPlayerInitialized = true;
 			// Cancel any pending gapless updates and re-send them
 			mHandler.removeMessages(MSG_GAPLESS_UPDATE);
@@ -1508,8 +1589,10 @@ public final class PlaybackService extends Service
 				mPendingSeek = 0;
 			}
 
-			if ((mState & FLAG_PLAYING) != 0)
+			if ((mState & FLAG_PLAYING) != 0) {
 				mMediaPlayer.start();
+				scheduleMpdjTick();
+			}
 
 			if ((mState & FLAG_ERROR) != 0) {
 				mErrorMessage = null;
@@ -1681,6 +1764,7 @@ public final class PlaybackService extends Service
 	private static final int MSG_CROSSFADE_STEP = 21;
 	private static final int MSG_PLAYER_COMPLETED = 22;
 	private static final int MSG_SEEK_COMPLETED = 23;
+	private static final int MSG_MPDJ_TICK = 24;
 
 	@Override
 	public boolean handleMessage(Message message)
@@ -1750,6 +1834,9 @@ public final class PlaybackService extends Service
 			break;
 		case MSG_CROSSFADE_STEP:
 			processCrossfadeStep(message.arg1);
+			break;
+		case MSG_MPDJ_TICK:
+			processMpdjTick();
 			break;
 		case MSG_PLAYER_COMPLETED:
 			processPlayerCompletion(message.arg1, (VanillaMediaPlayer)message.obj);
